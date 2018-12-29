@@ -28,9 +28,12 @@ def make_cals(bias=False,dark=False,flat=False,
               exposures=['030','060','120','180','240','300','600'],
               filters=['B','Blue',"g'",'Grating','Green','Ha','I',"i'",
                        'Luminance','OIII','R',"r'",'Red','SII','V','Y',"z'"],
-              root ='Z:\Calibration Files',
+              #root ='Z:\Calibration Files',
+              #suffix='.fts'):
+              #root ='/Users/jfausett/Dropbox/Calibration Files/',
+              #suffix='.fts'):
+              root = '/Users/jakrin/Calibration Files/',
               suffix='.fts'):
-              #root ='/Users/jfausett/Dropbox/Calibration Files/',suffix='.fts'):
     """
     Overview:
     ---------
@@ -57,8 +60,9 @@ def make_cals(bias=False,dark=False,flat=False,
 
     """
 
-    mstdir = 'Z:\Calibration Master Frames\\'
+    #mstdir = 'Z:\Calibration Master Frames\\'
     #mstdir = '/Users/jfausett/Dropbox/Calibration Master Frames/'
+    mstdir = '/Users/jakrin/Calibration Master Frames/'
     if not os.path.exists(mstdir):
         os.makedirs(mstdir)
         print 'Creating master directory'
@@ -211,45 +215,31 @@ def make_cals(bias=False,dark=False,flat=False,
 
                     fct = len(fnames)
 
+                    biasdir = mstdir+bns+'\\Bias\\'+tagdate+'\\'
+
                     if fct > 50:
                         print 'There are %d total files\n'%fct
                         print 'Too many files to make master\n'
-                        break
-
+                        pass
                     elif fct > 35 and fct <= 50 and bns == '1X1':
                         sub_frames = [fnames[x:x+15] for x in xrange(0, len(fnames), 15)]
                         print 'Creating sub_master_bias for '+tagdate+' with '+bns+' and a temperature of '+tmp
-                        if not os.path.exists(mstdir+tagdate+'\\'+bns+'\\'):
-                            os.makedirs(mstdir+tagdate+'\\'+bns+'\\')
-# =============================================================================
-#                         if not os.path.exists(mstdir+tagdate+'/'+bns+'/'):
-#                             os.makedirs(mstdir+tagdate+'/'+bns+'/')
-# =============================================================================
+                        if not os.path.exists(biasdir):
+                            os.makedirs(biasdir)
                         for i in range(3):
-                            master_bias(files=sub_frames[i], outdir=mstdir+tagdate+'\\'+bns+'\\', tag=tagdate+'_'+bns+'_%d'% (i+1))
-                            #master_bias(files=sub_frames[i], outdir=mstdir+tagdate+'/'+bns+'/', tag=tagdate+'_'+bns+'_%d'% (i+1))
+                            master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate+'_'+bns+'_%d'% (i+1))
                     elif fct>=20 and fct <= 35 and bns == '1X1':
                         sub_frames = [fnames[x*(fct/2):(x+1)*(fct/2)] for x in range((len(fnames)+ (fct/2)-1)//(fct/2))]
                         print 'Creating sub_master_bias for '+tagdate+' with '+bns+' and a temperature of '+tmp
-                        if not os.path.exists(mstdir+tagdate+'\\'+bns+'\\'):
-                            os.makedirs(mstdir+tagdate+'\\'+bns+'\\')
-# =============================================================================
-#                         if not os.path.exists(mstdir+tagdate+'/'+bns+'/'):
-#                             os.makedirs(mstdir+tagdate+'/'+bns+'/')
-# =============================================================================
+                        if not os.path.exists(biasdir):
+                            os.makedirs(biasdir)
                         for i in range(2):
-                            master_bias(files=sub_frames[i], outdir=mstdir+tagdate+'\\'+bns+'\\', tag=tagdate+'_'+bns+'_%d'% (i+1))
-                            #master_bias(files=sub_frames[i], outdir=mstdir+tagdate+'/'+bns+'/', tag=tagdate+'_'+bns+'_%d'% (i+1))
+                            master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate+'_'+bns+'_%d'% (i+1))
                     elif fct > 1:
-                        if not os.path.exists(mstdir+tagdate+'\\'+bns+'\\'):
-                            os.makedirs(mstdir+tagdate+'\\'+bns+'\\')
-# =============================================================================
-#                         if not os.path.exists(mstdir+tagdate+'/'+bns+'/'):
-#                             os.makedirs(mstdir+tagdate+'/'+bns+'/')
-# =============================================================================
+                        if not os.path.exists(biasdir):
+                            os.makedirs(biasdir)
                         print 'Creating master_bias for '+tagdate+' with '+bns+' and a temperature of '+tmp
-                        master_bias(files=fnames, outdir=mstdir+tagdate+'\\'+bns+'\\', tag=tagdate+'_'+bns)
-                        #master_bias(files=fnames, outdir=mstdir+tagdate+'/'+bns+'/', tag=tagdate+'_'+bns)
+                        master_bias(files=fnames, outdir=biasdir, tag=tagdate+'_'+bns)
         del bias_files
     
     if dark:

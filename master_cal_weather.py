@@ -213,7 +213,7 @@ def make_cals(bias=False,dark=False,flat=False,
 
         newdates = [x for x in dates if x not in donedates]
 
-        if len(newdates) > 0:
+        if len(newdates) == 0:
             print '\nDid not find any new dates with Bias Frames\n'
             pass
 
@@ -232,9 +232,6 @@ def make_cals(bias=False,dark=False,flat=False,
                     biasdir = mstdir+bns+'\\Bias\\'+tagdate+'\\'
                     #biasdir = mstdir+bns+'/Bias/'+tagdate+'/'
 
-                    if os.path.exists('{}master_bias_{}_{}.fits'.format(biasdir, tagdate, bns)):
-                        continue
-
                     filter1 = bias_files['temp'] == tmp
                     filter2 = bias_files['binning'] == bns
                     filter3 = bias_files['JD'] == date
@@ -252,14 +249,14 @@ def make_cals(bias=False,dark=False,flat=False,
                         pass
                     elif fct > 35 and fct <= 50 and bns == '1X1':
                         sub_frames = [fnames[x:x+15] for x in xrange(0, len(fnames), 15)]
-                        print 'Creating sub_master_bias for '+tagdate+' with '+bns+' and a temperature of '+tmp
+                        print 'Creating sub_master_bias: binning is {}, date is {}'.format(bns, tagdate)
                         if not os.path.exists(biasdir):
                             os.makedirs(biasdir)
                         for i in range(3):
                             master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate+'_'+bns+'_%d'% (i+1))
                     elif fct>=20 and fct <= 35 and bns == '1X1':
                         sub_frames = [fnames[x*(fct/2):(x+1)*(fct/2)] for x in range((len(fnames)+ (fct/2)-1)//(fct/2))]
-                        print 'Creating sub_master_bias for '+tagdate+' with '+bns+' and a temperature of '+tmp
+                        print 'Creating sub_master_bias: binning is {}, date is {}'.format(bns, tagdate)
                         if not os.path.exists(biasdir):
                             os.makedirs(biasdir)
                         for i in range(2):
@@ -267,7 +264,7 @@ def make_cals(bias=False,dark=False,flat=False,
                     elif fct > 1:
                         if not os.path.exists(biasdir):
                             os.makedirs(biasdir)
-                        print 'Creating master_bias for '+tagdate+' with '+bns+' and a temperature of '+tmp
+                        print 'Creating master_bias: binning is {}, date is {}'.format(bns, tagdate)
                         master_bias(files=fnames, outdir=biasdir, tag=tagdate+'_'+bns)
         del bias_files
     
@@ -284,25 +281,43 @@ def make_cals(bias=False,dark=False,flat=False,
         dates = np.unique(dark_files.loc[:,'JD'])
         dates = [int(x) for x in dates]
 
-        for date in dates:
-            year, month, day = jd_to_date(date)
-            day = int(day)
+        print '\nParsing existing data frames to determine new Dark data\n'
+        donedates = []
+        for date in tqdm(dates):
+            year, month, day, sec = jd2gcal(sjd, (date-sjd))
             year, month, day = str(year), str(month), str(day)
             if len(month) == 1:
                 month = '0'+month
             if len(day) == 1:
                 day = '0'+day
-            tagdate = year+month+day
-            print '\nChecking frames for '+tagdate
+            tagdate = year + month + day
+
+            for bns in bins:
+                if os.path.exists(mstdir+'{}\\Dark\\{}'.format(bns, tagdate)):
+                    donedates.append(date)
+
+        newdates = [x for x in dates if x not in donedates]
+
+        if len(newdates) > 0:
+            print '\nDid not find any new dates with Dark Frames\n'
+            pass
+
+        print '\nBeginning master dark creation for new dates\n'
+        for date in tqdm(newdates):
+            year, month, day, sec = jd2gcal(sjd, (date - sjd))
+            year, month, day = str(year), str(month), str(day)
+            if len(month) == 1:
+                month = '0' + month
+            if len(day) == 1:
+                day = '0' + day
+            tagdate = year + month + day
+
             for tmp in temps:
                 for bns in bins:
                     for exp in exposures:
 
                         darkdir = mstdir+bns+'\\Dark\\'+tagdate+'\\'
                         #darkdir = mstdir+bns+'/Dark/'+tagdate+'/'
-
-                        if os.path.exists('{}master_dark_{}_{}_{}.fits'.format(darkdir, tagdate, bns, exp)):
-                            continue
 
                         filter1 = dark_files['temp'] == tmp
                         filter2 = dark_files['binning'] == bns
@@ -315,7 +330,6 @@ def make_cals(bias=False,dark=False,flat=False,
                         fnames = files['name'].tolist()
                         fct = len(fnames)
 
-
                         if fct > 50:
                             print 'There are %d total files\n'%fct
                             print 'Too many files to make master\n'
@@ -323,7 +337,7 @@ def make_cals(bias=False,dark=False,flat=False,
                         elif fct > 35 and fct <= 50 and bns == '1X1':
                             print 'There are %d total files\n'%fct
                             sub_frames = [fnames[x:x+15] for x in xrange(0, len(fnames), 15)]
-                            print 'Creating sub_master_dark for '+tagdate+' with '+bns+' and a temperature of '+tmp
+                            print 'Creating sub_master_dark: binning is {}, date is {}'.format(bns, tagdate)
                             if not os.path.exists(darkdir):
                                 os.makedirs(darkdir)
                             for i in range(3):
@@ -331,7 +345,7 @@ def make_cals(bias=False,dark=False,flat=False,
                         elif fct>=20 and fct <= 35 and bns == '1X1':
                             print 'There are %d total files\n'%fct
                             sub_frames = [fnames[x*(fct/2):(x+1)*(fct/2)] for x in range((len(fnames)+ (fct/2)-1)//(fct/2))]
-                            print 'Creating sub_master_dark for '+tagdate+' with '+bns+' and a temperature of '+tmp
+                            print 'Creating sub_master_dark: binning is {}, date is {}'.format(bns, tagdate)
                             if not os.path.exists(darkdir):
                                 os.makedirs(darkdir)
                             for i in range(2):
@@ -339,7 +353,7 @@ def make_cals(bias=False,dark=False,flat=False,
                         elif fct > 1:
                             if not os.path.exists(darkdir):
                                 os.makedirs(darkdir)
-                            print 'Creating master_dark for '+tagdate+' with '+bns+' and a temperature of '+tmp
+                            print 'Creating master_dark: binning is {}, date is {}'.format(bns, tagdate)
                             master_dark(files=fnames, outdir=darkdir, tag=tagdate+'_'+bns+'_'+exp)
         del dark_files
                             
@@ -356,25 +370,43 @@ def make_cals(bias=False,dark=False,flat=False,
         dates = np.unique(flat_files.loc[:,'JD'])
         dates = [int(x) for x in dates]
 
-        for date in dates:
-            year, month, day = jd_to_date(date)
-            day = int(day)
+        print '\nParsing existing data frames to determine new Flat data\n'
+        donedates = []
+        for date in tqdm(dates):
+            year, month, day, sec = jd2gcal(sjd, (date - sjd))
             year, month, day = str(year), str(month), str(day)
             if len(month) == 1:
-                month = '0'+month
+                month = '0' + month
             if len(day) == 1:
-                day = '0'+day
-            tagdate = year+month+day
-            print '\nChecking frames for '+tagdate
+                day = '0' + day
+            tagdate = year + month + day
+
+            for bns in bins:
+                if os.path.exists(mstdir + '{}\\Flat\\{}'.format(bns, tagdate)):
+                    donedates.append(date)
+
+        newdates = [x for x in dates if x not in donedates]
+
+        if len(newdates) == 0:
+            print '\nDid not find any new dates with Flat Frames\n'
+            pass
+
+        print '\nBeginning master flat creation for new dates\n'
+        for date in tqdm(newdates):
+            year, month, day, sec = jd2gcal(sjd, (date - sjd))
+            year, month, day = str(year), str(month), str(day)
+            if len(month) == 1:
+                month = '0' + month
+            if len(day) == 1:
+                day = '0' + day
+            tagdate = year + month + day
+
             for tmp in temps:
                 for bns in bins:
                     for band in filters:
 
                         flatdir = mstdir + bns + '\\Flat\\' + tagdate + '\\'
                         # flatdir = mstdir+bns+'/Flat/'+tagdate+'/'
-
-                        if os.path.exists('{}master_flat_{}_{}_{}.fits'.format(flatdir, tagdate, bns, band)):
-                            continue
 
                         filter1 = flat_files['temp'] == tmp
                         filter2 = flat_files['binning'] == bns
@@ -387,7 +419,6 @@ def make_cals(bias=False,dark=False,flat=False,
                         fnames = files['name'].tolist()
                         fct = len(fnames)
 
-
                         if fct > 50:
                             print 'There are %d total files\n'%fct
                             print 'Too many files to make master\n'
@@ -395,7 +426,7 @@ def make_cals(bias=False,dark=False,flat=False,
                         elif fct > 35 and fct <= 50 and bns == '1X1':
                             print 'There are %d total files\n'%fct
                             sub_frames = [fnames[x:x+15] for x in xrange(0, len(fnames), 15)]
-                            print 'Creating sub_master_flat for '+tagdate+' with '+bns+' and a temperature of '+tmp
+                            print 'Creating sub_master_flat: binning is {}, date is {}'.format(bns, tagdate)
                             if not os.path.exists(flatdir):
                                 os.makedirs(flatdir)
                             for i in range(3):
@@ -403,7 +434,7 @@ def make_cals(bias=False,dark=False,flat=False,
                         elif fct>=20 and fct <= 35 and bns == '1X1':
                             print 'There are %d total files\n'%fct
                             sub_frames = [fnames[x*(fct/2):(x+1)*(fct/2)] for x in range((len(fnames)+ (fct/2)-1)//(fct/2))]
-                            print 'Creating sub_master_flat for '+tagdate+' with '+bns+' and a temperature of '+tmp
+                            print 'Creating sub_master_flat: binning is {}, date is {}'.format(bns, tagdate)
                             if not os.path.exists(flatdir):
                                 os.makedirs(flatdir)
                             for i in range(2):
@@ -411,7 +442,7 @@ def make_cals(bias=False,dark=False,flat=False,
                         elif fct > 1:
                             if not os.path.exists(flatdir):
                                 os.makedirs(flatdir)
-                            print '\nCreating master_flat for '+tagdate+' with '+bns+' and a temperature of '+tmp
+                            print '\nCreating master_flat: binning is {}, date is {}'.format(bns, tagdate)
                             master_flat(files=fnames, outdir=flatdir, tag=tagdate+'_'+bns, band=band)
         del flat_files
 

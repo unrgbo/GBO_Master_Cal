@@ -91,7 +91,7 @@ def make_cals(bias=False,dark=False,flat=False,
     if os.path.exists(mstdir+'all_files.pkl'):
         done_files = pd.read_pickle(mstdir+'all_files.pkl')
         
-        print 'Found existing dataframe with %d files' % len(done_files)
+        print 'Found existing dataframe with {} files' .format(len(done_files))
         done_list = done_files['name'].tolist()
         new_list = [x for x in list_of_files if x not in done_list]
         #  Append existing data frame with info from new files
@@ -130,9 +130,9 @@ def make_cals(bias=False,dark=False,flat=False,
             done_files.to_pickle(mstdir+'all_files.pkl')
             print '\nHere are the files without temperature info in header:\n'
             print no_temp
-        
+
         del done_files
-        
+
     #  Create a master dataframe for all files
     else:
         print 'Creating master dataframe to parse \n'
@@ -175,19 +175,21 @@ def make_cals(bias=False,dark=False,flat=False,
             
         print 'Writing out dataframe to : '+mstdir+'all_files.pkl'
         all_files.to_pickle(mstdir+'all_files.pkl')
-        
+
         del all_files
+
+    del list_of_files
 
     if bias:
         
         all_files = pd.DataFrame()
         all_files = pd.read_pickle(mstdir+'all_files.pkl')
-        
+
         bias_files = all_files.where(all_files['type'] == 'Bias Frame')
-        bias_files.dropna(how='all',inplace=True)   
+        bias_files.dropna(how='all', inplace=True)
         
         del all_files
-        
+
         dates = np.unique(bias_files.loc[:,'JD'])
         dates = [int(x) for x in dates]  
         
@@ -203,6 +205,12 @@ def make_cals(bias=False,dark=False,flat=False,
             print '\nChecking frames for '+tagdate
             for tmp in temps:
                 for bns in bins:
+                    biasdir = mstdir+bns+'\\Bias\\'+tagdate+'\\'
+                    #biasdir = mstdir+bns+'/Bias/'+tagdate+'/'
+
+                    if os.path.exists('{}master_bias_{}_{}.fits'.format(biasdir, tagdate, bns)):
+                        continue
+
                     filter1 = bias_files['temp'] == tmp
                     filter2 = bias_files['binning'] == bns
                     filter3 = bias_files['JD'] == date
@@ -212,11 +220,7 @@ def make_cals(bias=False,dark=False,flat=False,
                     files.dropna(how='all', inplace=True)
 
                     fnames = files['name'].tolist()
-
                     fct = len(fnames)
-
-                    biasdir = mstdir+bns+'\\Bias\\'+tagdate+'\\'
-                    #biasdir = mstdir+bns+'/Bias/'+tagdate+'/'
 
                     if fct > 50:
                         print 'There are %d total files\n'%fct
@@ -269,6 +273,13 @@ def make_cals(bias=False,dark=False,flat=False,
             for tmp in temps:
                 for bns in bins:
                     for exp in exposures:
+
+                        darkdir = mstdir+bns+'\\Dark\\'+tagdate+'\\'
+                        #darkdir = mstdir+bns+'/Dark/'+tagdate+'/'
+
+                        if os.path.exists('{}master_dark_{}_{}_{}.fits'.format(darkdir, tagdate, bns, exp)):
+                            continue
+
                         filter1 = dark_files['temp'] == tmp
                         filter2 = dark_files['binning'] == bns
                         filter3 = dark_files['JD'] == date
@@ -278,11 +289,8 @@ def make_cals(bias=False,dark=False,flat=False,
                         files.dropna(how='all',inplace=True)
                     
                         fnames = files['name'].tolist()
-
                         fct = len(fnames)
 
-                        darkdir = mstdir+bns+'\\Dark\\'+tagdate+'\\'
-                        #darkdir = mstdir+bns+'/Dark/'+tagdate+'/'
 
                         if fct > 50:
                             print 'There are %d total files\n'%fct
@@ -337,6 +345,13 @@ def make_cals(bias=False,dark=False,flat=False,
             for tmp in temps:
                 for bns in bins:
                     for band in filters:
+
+                        flatdir = mstdir + bns + '\\Flat\\' + tagdate + '\\'
+                        # flatdir = mstdir+bns+'/Flat/'+tagdate+'/'
+
+                        if os.path.exists('{}master_flat_{}_{}_{}.fits'.format(flatdir, tagdate, bns, band)):
+                            continue
+
                         filter1 = flat_files['temp'] == tmp
                         filter2 = flat_files['binning'] == bns
                         filter3 = flat_files['JD'] == date
@@ -346,11 +361,8 @@ def make_cals(bias=False,dark=False,flat=False,
                         files.dropna(how='all',inplace=True)
                     
                         fnames = files['name'].tolist()
-
                         fct = len(fnames)
 
-                        flatdir = mstdir+bns+'\\Flat\\'+tagdate+'\\'
-                        #flatdir = mstdir+bns+'/Flat/'+tagdate+'/'
 
                         if fct > 50:
                             print 'There are %d total files\n'%fct

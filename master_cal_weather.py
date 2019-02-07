@@ -211,7 +211,6 @@ def make_cals(bias=False,dark=False,flat=False,
                 if not os.path.exists(mstdir+'{}\\Bias\\{}'.format(bns, tagdate)):
                     newdates.append(date)
 
-        newdates = [x for x in tagdates if x not in donedates]
 
         if len(newdates) > 0:
             print '\nDid not find any new dates with Bias Frames\n'

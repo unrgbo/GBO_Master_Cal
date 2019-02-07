@@ -197,7 +197,7 @@ def make_cals(bias=False,dark=False,flat=False,
         dates = [int(x) for x in dates]
 
         print '\nParsing existing data frames to determine new Bias data\n'
-        newdates = []
+        donedates = []
         for date in tqdm(dates):
             year, month, day, sec = jd2gcal(sjd, (date-sjd))
             year, month, day = str(year), str(month), str(day)
@@ -208,9 +208,10 @@ def make_cals(bias=False,dark=False,flat=False,
             tagdate = year + month + day
 
             for bns in bins:
-                if not os.path.exists(mstdir+'{}\\Bias\\{}'.format(bns, tagdate)):
-                    newdates.append(date)
+                if os.path.exists(mstdir+'{}\\Bias\\{}'.format(bns, tagdate)):
+                    donedates.append(date)
 
+        newdates = [x for x in dates if x not in donedates]
 
         if len(newdates) > 0:
             print '\nDid not find any new dates with Bias Frames\n'

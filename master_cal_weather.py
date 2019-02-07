@@ -15,6 +15,7 @@ import robust as rb
 #from length import *
 import math
 from tqdm import tqdm
+from jdcal import gcal2jd, jd2gcal
 
 # This is a test comment for looking at branch
 
@@ -50,15 +51,17 @@ def make_cals(bias=False,dark=False,flat=False,
     
     Keyword arguments:
     ------------------
-    bias        : Weather or not to create master bias (default False)
-    dark        : Weather or not to create master darks (default False)
-    flat        : Weather or not to create master flats (default False)
+    bias        : Whether or not to create master bias (default False)
+    dark        : Whether or not to create master darks (default False)
+    flat        : Whether or not to create master flats (default False)
 
     Calling sequence:
     -----------------
     make_cals(bias=True,dark=True,flat=True)
 
     """
+
+    sjd = 2400000.5
 
     mstdir = 'Z:\Calibration Master Frames\\'
     #mstdir = '/Users/jfausett/Dropbox/Calibration Master Frames/'
@@ -190,19 +193,40 @@ def make_cals(bias=False,dark=False,flat=False,
         
         del all_files
 
-        dates = np.unique(bias_files.loc[:,'JD'])
-        dates = [int(x) for x in dates]  
-        
-        for date in dates:
-            year, month, day = jd_to_date(date)
-            day = int(day)
+        dates = np.unique(bias_files.loc[:, 'JD'])
+        dates = [int(x) for x in dates]
+
+        print '\nParsing existing data frames to determine new Bias data\n'
+        newdates = []
+        for date in tqdm(dates):
+            year, month, day, sec = jd2gcal(sjd, (date-sjd))
             year, month, day = str(year), str(month), str(day)
             if len(month) == 1:
                 month = '0'+month
             if len(day) == 1:
                 day = '0'+day
-            tagdate = year+month+day
-            print '\nChecking frames for '+tagdate
+            tagdate = year + month + day
+
+            for bns in bins:
+                if not os.path.exists(mstdir+'{}\\Bias\\{}'.format(bns, tagdate)):
+                    newdates.append(date)
+
+        newdates = [x for x in tagdates if x not in donedates]
+
+        if len(newdates) > 0:
+            print '\nDid not find any new dates with Bias Frames\n'
+            pass
+
+        print '\nBeginning master bias creation for new dates\n'
+        for date in tqdm(newdates):
+            year, month, day, sec = jd2gcal(sjd, (date - sjd))
+            year, month, day = str(year), str(month), str(day)
+            if len(month) == 1:
+                month = '0' + month
+            if len(day) == 1:
+                day = '0' + day
+            tagdate = year + month + day
+
             for tmp in temps:
                 for bns in bins:
                     biasdir = mstdir+bns+'\\Bias\\'+tagdate+'\\'

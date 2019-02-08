@@ -10,19 +10,23 @@ from tqdm import tqdm
 from jdcal import gcal2jd, jd2gcal
 
 datapath = raw_input('Type the exact path to the directory containing your data:\n' +
-                     '\nexample, "C:\Dropbox\User\Object"') + '\\'
+                     '\nexample, C:\Dropbox\User\Object')
 
 prefix = raw_input(('Type the prefix for your image file names\n' +
-                    '\nexample, "NGC1976"'))
+                    '\nexample, NGC1976'))
 
 suffix = raw_input(('Type the suffix for your image file names\n' +
-                    '\nexample, ".fts"'))
+                    '\nexample, .fts'))
 
 msdir = 'Z:\Calibration Master Frames\\'
 
 caltypes = ['Bias', 'Dark', 'Flat']
 
 done_files = pd.read_pickle(mstdir + 'all_files.pkl')
+
+datafiles = glob.glob(datapath + '\\{}*{}'.format(prefix, suffix))
+
+
 
 dates = []
 i = 0

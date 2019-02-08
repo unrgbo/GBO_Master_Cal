@@ -25,7 +25,6 @@ from jdcal import gcal2jd, jd2gcal
 # =============================================================================
 def make_cals(bias=False,dark=False,flat=False,
               bins=['1X1','2X2','3X3','4X4'],
-              temps=['-25','-30','-35'],
               exposures=['030','060','120','180','240','300','600'],
               filters=['B','Blue',"g'",'Grating','Green','Ha','I',"i'",
                        'Luminance','OIII','R',"r'",'Red','SII','V','Y',"z'"],
@@ -227,45 +226,45 @@ def make_cals(bias=False,dark=False,flat=False,
                 day = '0' + day
             tagdate = year + month + day
 
-            for tmp in temps:
-                for bns in bins:
-                    biasdir = mstdir+bns+'\\Bias\\'+tagdate+'\\'
-                    #biasdir = mstdir+bns+'/Bias/'+tagdate+'/'
-
-                    filter1 = bias_files['temp'] == tmp
-                    filter2 = bias_files['binning'] == bns
-                    filter3 = bias_files['JD'] == date
+            for bns in bins:
+                biasdir = mstdir+bns+'\\Bias\\'+tagdate+'\\'
+                #biasdir = mstdir+bns+'/Bias/'+tagdate+'/'
+                
+                filter1 = bias_files['binning'] == bns
+                filter2 = bias_files['JD'] == date
                     
-                    files = bias_files.where(filter1 & filter2 & filter3)
+                files = bias_files.where(filter1 & filter2)
         
-                    files.dropna(how='all', inplace=True)
+                files.dropna(how='all', inplace=True)
 
-                    fnames = files['name'].tolist()
-                    fct = len(fnames)
+                fnames = files['name'].tolist()
+                fct = len(fnames)
 
-                    if fct > 50:
-                        print 'There are %d total files\n'%fct
-                        print 'Too many files to make master\n'
-                        pass
-                    elif fct > 35 and fct <= 50 and bns == '1X1':
-                        sub_frames = [fnames[x:x+15] for x in xrange(0, len(fnames), 15)]
-                        print 'Creating sub_master_bias: binning is {}, date is {}'.format(bns, tagdate)
-                        if not os.path.exists(biasdir):
-                            os.makedirs(biasdir)
-                        for i in range(3):
-                            master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate+'_'+bns+'_%d'% (i+1))
-                    elif fct>=20 and fct <= 35 and bns == '1X1':
-                        sub_frames = [fnames[x*(fct/2):(x+1)*(fct/2)] for x in range((len(fnames)+ (fct/2)-1)//(fct/2))]
-                        print 'Creating sub_master_bias: binning is {}, date is {}'.format(bns, tagdate)
-                        if not os.path.exists(biasdir):
-                            os.makedirs(biasdir)
-                        for i in range(2):
-                            master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate+'_'+bns+'_%d'% (i+1))
-                    elif fct > 1:
-                        if not os.path.exists(biasdir):
-                            os.makedirs(biasdir)
-                        print 'Creating master_bias: binning is {}, date is {}'.format(bns, tagdate)
-                        master_bias(files=fnames, outdir=biasdir, tag=tagdate+'_'+bns)
+                if fct > 50:
+                    print 'There are %d total files\n'%fct
+                    print 'Too many files to make master\n'
+                    pass
+                elif fct > 35 and fct <= 50 and bns == '1X1':
+                    sub_frames = [fnames[x:x+15] for x in xrange(0, len(fnames), 15)]
+                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(bns, tagdate)
+                    if not os.path.exists(biasdir):
+                        os.makedirs(biasdir)
+                    for i in range(3):
+                        master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate+'_'+bns+'_%d'% (i+1))
+                elif fct>=20 and fct <= 35 and bns == '1X1':
+                    sub_frames = [fnames[x*(fct/2):(x+1)*(fct/2)] for x in range((len(fnames)+ (fct/2)-1)//(fct/2))]
+                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(bns, tagdate)
+                    if not os.path.exists(biasdir):
+                        os.makedirs(biasdir)
+                    for i in range(2):
+                        master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate+'_'+bns+'_%d'% (i+1))
+                elif fct > 1:
+                    if not os.path.exists(biasdir):
+                        os.makedirs(biasdir)
+                    print 'Creating master_bias: binning is {}, date is {}'.format(bns, tagdate)
+                    master_bias(files=fnames, outdir=biasdir, tag=tagdate+'_'+bns)
+                else:
+                    print 'No Bias Frames foun'
         del bias_files
     
     if dark:
@@ -312,49 +311,49 @@ def make_cals(bias=False,dark=False,flat=False,
                 day = '0' + day
             tagdate = year + month + day
 
-            for tmp in temps:
-                for bns in bins:
-                    for exp in exposures:
+            for bns in bins:
+                for exp in exposures:
 
-                        darkdir = mstdir+bns+'\\Dark\\'+tagdate+'\\'
-                        #darkdir = mstdir+bns+'/Dark/'+tagdate+'/'
+                    darkdir = mstdir+bns+'\\Dark\\'+tagdate+'\\'
+                    #darkdir = mstdir+bns+'/Dark/'+tagdate+'/'
 
-                        filter1 = dark_files['temp'] == tmp
-                        filter2 = dark_files['binning'] == bns
-                        filter3 = dark_files['JD'] == date
-                        filter4 = dark_files['exp'] == exp
+                    filter1 = dark_files['binning'] == bns
+                    filter2 = dark_files['JD'] == date
+                    filter3 = dark_files['exp'] == exp
                         
-                        files = dark_files.where(filter1 & filter2 & filter3 & filter4)
-                        files.dropna(how='all',inplace=True)
+                    files = dark_files.where(filter1 & filter2 & filter3)
+                    files.dropna(how='all',inplace=True)
                     
-                        fnames = files['name'].tolist()
-                        fct = len(fnames)
+                    fnames = files['name'].tolist()
+                    fct = len(fnames)
 
-                        if fct > 50:
-                            print 'There are %d total files\n'%fct
-                            print 'Too many files to make master\n'
-                            pass
-                        elif fct > 35 and fct <= 50 and bns == '1X1':
-                            print 'There are %d total files\n'%fct
-                            sub_frames = [fnames[x:x+15] for x in xrange(0, len(fnames), 15)]
-                            print 'Creating sub_master_dark: binning is {}, date is {}'.format(bns, tagdate)
-                            if not os.path.exists(darkdir):
-                                os.makedirs(darkdir)
-                            for i in range(3):
-                                master_dark(files=sub_frames[i], outdir=darkdir, tag=tagdate+'_'+bns+'_'+exp+'_%d'% (i+1))
-                        elif fct>=20 and fct <= 35 and bns == '1X1':
-                            print 'There are %d total files\n'%fct
-                            sub_frames = [fnames[x*(fct/2):(x+1)*(fct/2)] for x in range((len(fnames)+ (fct/2)-1)//(fct/2))]
-                            print 'Creating sub_master_dark: binning is {}, date is {}'.format(bns, tagdate)
-                            if not os.path.exists(darkdir):
-                                os.makedirs(darkdir)
-                            for i in range(2):
-                                master_dark(files=sub_frames[i], outdir=darkdir, tag=tagdate+'_'+bns+'_'+exp+'_%d'% (i+1))
-                        elif fct > 1:
-                            if not os.path.exists(darkdir):
-                                os.makedirs(darkdir)
-                            print 'Creating master_dark: binning is {}, date is {}'.format(bns, tagdate)
-                            master_dark(files=fnames, outdir=darkdir, tag=tagdate+'_'+bns+'_'+exp)
+                    if fct > 50:
+                        print 'There are %d total files\n'%fct
+                        print 'Too many files to make master\n'
+                        pass
+                    elif fct > 35 and fct <= 50 and bns == '1X1':
+                        print 'There are %d total files\n'%fct
+                        sub_frames = [fnames[x:x+15] for x in xrange(0, len(fnames), 15)]
+                        print 'Creating sub_master_dark: binning is {}, date is {}'.format(bns, tagdate)
+                        if not os.path.exists(darkdir):
+                            os.makedirs(darkdir)
+                        for i in range(3):
+                            master_dark(files=sub_frames[i], outdir=darkdir, tag=tagdate+'_'+bns+'_'+exp+'_%d'% (i+1))
+                    elif fct>=20 and fct <= 35 and bns == '1X1':
+                        print 'There are %d total files\n'%fct
+                        sub_frames = [fnames[x*(fct/2):(x+1)*(fct/2)] for x in range((len(fnames)+ (fct/2)-1)//(fct/2))]
+                        print 'Creating sub_master_dark: binning is {}, date is {}'.format(bns, tagdate)
+                        if not os.path.exists(darkdir):
+                            os.makedirs(darkdir)
+                        for i in range(2):
+                            master_dark(files=sub_frames[i], outdir=darkdir, tag=tagdate+'_'+bns+'_'+exp+'_%d'% (i+1))
+                    elif fct > 1:
+                        if not os.path.exists(darkdir):
+                            os.makedirs(darkdir)
+                        print 'Creating master_dark: binning is {}, date is {}'.format(bns, tagdate)
+                        master_dark(files=fnames, outdir=darkdir, tag=tagdate+'_'+bns+'_'+exp)
+                    else:
+                        print 'No Dark Frames found'
         del dark_files
                             
     if flat:
@@ -401,49 +400,49 @@ def make_cals(bias=False,dark=False,flat=False,
                 day = '0' + day
             tagdate = year + month + day
 
-            for tmp in temps:
-                for bns in bins:
-                    for band in filters:
+            for bns in bins:
+                for band in filters:
 
-                        flatdir = mstdir + bns + '\\Flat\\' + tagdate + '\\'
-                        # flatdir = mstdir+bns+'/Flat/'+tagdate+'/'
+                    flatdir = mstdir + bns + '\\Flat\\' + tagdate + '\\'
+                    # flatdir = mstdir+bns+'/Flat/'+tagdate+'/'
 
-                        filter1 = flat_files['temp'] == tmp
-                        filter2 = flat_files['binning'] == bns
-                        filter3 = flat_files['JD'] == date
-                        filter4 = flat_files['filter'] == band
+                    filter1 = flat_files['binning'] == bns
+                    filter2 = flat_files['JD'] == date
+                    filter3 = flat_files['filter'] == band
                         
-                        files = flat_files.where(filter1 & filter2 & filter3 & filter4)
-                        files.dropna(how='all',inplace=True)
+                    files = flat_files.where(filter1 & filter2 & filter3)
+                    files.dropna(how='all',inplace=True)
                     
-                        fnames = files['name'].tolist()
-                        fct = len(fnames)
+                    fnames = files['name'].tolist()
+                    fct = len(fnames)
 
-                        if fct > 50:
-                            print 'There are %d total files\n'%fct
-                            print 'Too many files to make master\n'
-                            pass
-                        elif fct > 35 and fct <= 50 and bns == '1X1':
-                            print 'There are %d total files\n'%fct
-                            sub_frames = [fnames[x:x+15] for x in xrange(0, len(fnames), 15)]
-                            print 'Creating sub_master_flat: binning is {}, date is {}'.format(bns, tagdate)
-                            if not os.path.exists(flatdir):
-                                os.makedirs(flatdir)
-                            for i in range(3):
-                                master_flat(files=sub_frames[i], outdir=flatdir, tag=tagdate+'_'+bns+'_%d'% (i+1), band=band)
-                        elif fct>=20 and fct <= 35 and bns == '1X1':
-                            print 'There are %d total files\n'%fct
-                            sub_frames = [fnames[x*(fct/2):(x+1)*(fct/2)] for x in range((len(fnames)+ (fct/2)-1)//(fct/2))]
-                            print 'Creating sub_master_flat: binning is {}, date is {}'.format(bns, tagdate)
-                            if not os.path.exists(flatdir):
-                                os.makedirs(flatdir)
-                            for i in range(2):
-                                master_flat(files=sub_frames[i], outdir=flatdir, tag=tagdate+'_'+bns+'_%d'% (i+1), band=band)
-                        elif fct > 1:
-                            if not os.path.exists(flatdir):
-                                os.makedirs(flatdir)
-                            print '\nCreating master_flat: binning is {}, date is {}'.format(bns, tagdate)
-                            master_flat(files=fnames, outdir=flatdir, tag=tagdate+'_'+bns, band=band)
+                    if fct > 50:
+                        print 'There are %d total files\n'%fct
+                        print 'Too many files to make master\n'
+                        pass
+                    elif fct > 35 and fct <= 50 and bns == '1X1':
+                        print 'There are %d total files\n'%fct
+                        sub_frames = [fnames[x:x+15] for x in xrange(0, len(fnames), 15)]
+                        print 'Creating sub_master_flat: binning is {}, date is {}'.format(bns, tagdate)
+                        if not os.path.exists(flatdir):
+                            os.makedirs(flatdir)
+                        for i in range(3):
+                            master_flat(files=sub_frames[i], outdir=flatdir, tag=tagdate+'_'+bns+'_%d'% (i+1), band=band)
+                    elif fct>=20 and fct <= 35 and bns == '1X1':
+                        print 'There are %d total files\n'%fct
+                        sub_frames = [fnames[x*(fct/2):(x+1)*(fct/2)] for x in range((len(fnames)+ (fct/2)-1)//(fct/2))]
+                        print 'Creating sub_master_flat: binning is {}, date is {}'.format(bns, tagdate)
+                        if not os.path.exists(flatdir):
+                            os.makedirs(flatdir)
+                        for i in range(2):
+                            master_flat(files=sub_frames[i], outdir=flatdir, tag=tagdate+'_'+bns+'_%d'% (i+1), band=band)
+                    elif fct > 1:
+                        if not os.path.exists(flatdir):
+                            os.makedirs(flatdir)
+                        print '\nCreating master_flat: binning is {}, date is {}'.format(bns, tagdate)
+                        master_flat(files=fnames, outdir=flatdir, tag=tagdate+'_'+bns, band=band)
+                    else:
+                        print 'No Flat Frames found'
         del flat_files
 
 #----------------------------------------------------------------------#

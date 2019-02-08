@@ -42,13 +42,13 @@ bias_files.dropna(how='all', inplace=True)
 biasdates = []
 biaspaths = []
 for bns in bins:
-    bias_files = bias_files.where(bias_files['binning'] == bns)
-    bias_files.dropna(how='all', inplace=True)
+    files = bias_files.where(bias_files['binning'] == bns)
+    files.dropna(how='all', inplace=True)
     for date in dates:
         year, month, day = int(date[0:4]), int(date[4:6]), int(date[6:])
         jd1, jd2 = gcal2jd(year, month, day)
         jddate = jd1 + jd2
-        bdates = bias_files['JD'].tolist()
+        bdates = files['JD'].tolist()
         bdates = np.unique(bdates)
         biasdate = min(bdates, key=lambda x: abs(int(x) - jddate))
         year, month, day, sec = jd2gcal(sjd, (biasdate - sjd))
@@ -60,33 +60,3 @@ for bns in bins:
         tagdate = year + month + day
         sourcepath = '{}{}\\Bias\\{}\\master_bias_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns)
         shutil.copy(sourcepath, outpath)
-
-
-
-
-for date in biasdates:
-    for bns in bins:
-        year, month, day, sec = jd2gcal(sjd, (date - sjd))
-        year, month, day = str(year), str(month), str(day)
-        if len(month) == 1:
-            month = '0' + month
-        if len(day) == 1:
-            day = '0' + day
-        tagdate = year + month + day
-        sourcepath = '{}{}\\Bias\\{}\\master_bias_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns)
-        shutil.copy(sourcepath, outpath)
-
-darkdates = []
-for exp in exposures:
-
-    filter1 = dark_files['exp'] == exp
-
-    files = dark_files.where(filter1)
-    files.dropna(how='all', inplace=True)
-
-    ddates = files['JD'].tolist()
-    ddates = np.unique(ddates)
-
-
-    fnames = files['name'].tolist()
-    fct = len(fnames)

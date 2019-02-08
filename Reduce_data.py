@@ -85,7 +85,6 @@ for fname in datafiles:
         biastag = year + month + day
         biaspath = '{}{}\\Bias\\{}\\master_bias_{}_{}.fits'.format(mstdir, binning, biastag, biastag, binning)
         bias = fits.getdata(biaspath)
-        print 'Using {}'.format(biaspath)
 
         filter1 = cal_files['type'] == 'Dark Frame'
         filter2 = cal_files['exp'] == exp
@@ -103,7 +102,6 @@ for fname in datafiles:
         darktag = year + month + day
         darkpath = '{}{}\\Dark\\{}\\master_dark_{}_{}_{}.fits'.format(mstdir, binning, darktag, darktag, binning, exp)
         dark = (fits.getdata(darkpath) - bias) * int(exp)
-        print 'Using {} '.format(darkpath)
 
         filter1 = cal_files['type'] == 'Flat Field'
         filter2 = cal_files['filter'] == band
@@ -121,7 +119,6 @@ for fname in datafiles:
         flattag = year + month + day
         flatpath = '{}{}\\Flat\\{}\\master_flat_{}_{}_{}.fits'.format(mstdir, binning, flattag, flattag, binning, band)
         flat = fits.getdata(flatpath)
-        print 'Using {} '.format(flatpath)
 
         print '\nCalibrating {}\n'.format(fname)
         print 'Using {}\n{}\n{}\n'.format(biaspath, darkpath, flatpath)

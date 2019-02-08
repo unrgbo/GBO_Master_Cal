@@ -58,5 +58,9 @@ for bns in bins:
         if len(day) == 1:
             day = '0' + day
         tagdate = year + month + day
-        sourcepath = '{}{}\\Bias\\{}\\master_bias_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns)
-        shutil.copy(sourcepath, outpath)
+        try:
+            sourcepath = '{}{}\Bias\{}\master_bias_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns)
+            shutil.copy(sourcepath, outpath)
+        except:
+            sourcepath = '{}{}\Bias\{}\master_bias_{}_{}_1.fits'.format(mstdir, bns, tagdate, tagdate, bns)
+            shutil.copy(sourcepath, outpath)

@@ -1,7 +1,7 @@
 import shutil, os
 import pandas as pd
 import numpy as np
-from jdcal import jd2gcal
+from jdcal import jd2gcal, gcal2jd
 
 dates = input('What dates do you need calibration frames for\n'
               '*Must enter as a list of strings*\n'
@@ -46,7 +46,10 @@ bdates = bias_files['JD'].tolist()
 bdates = np.unique(bdates)
 biasdates = []
 for date in dates:
-    biasdate = min(bdates, key=lambda x: abs(int(x) - date))
+    year, month, day = int(date[0:4]), int(date[4:6]), int(date[6:])
+    jd1, jd2 = gcal2jd(year, month, day)
+    jddate = jd1 + jd2
+    biasdate = min(bdates, key=lambda x: abs(int(x) - jddate))
     biasdates.append(biasdate)
 biaspaths = []
 for date in biasdates:

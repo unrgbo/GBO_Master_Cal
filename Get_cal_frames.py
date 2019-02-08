@@ -35,25 +35,19 @@ cal_files = pd.DataFrame()
 cal_files = pd.read_pickle(mstdir+'all_files.pkl')
 
 
-
-dark_files = cal_files.where(cal_files['type'] == 'Dark Frame')
-dark_files.dropna(how='all', inplace=True)
-flat_files = cal_files.where(cal_files['type'] == 'Flat Field')
-flat_files.dropna(how='all', inplace=True)
+bias_files = cal_files.where(cal_files['type'] == 'Bias Frame')
+bias_files.dropna(how='all', inplace=True)
 
 
 biasdates = []
 biaspaths = []
 for bns in bins:
+    bias_files = bias_files.where(bias_files['binning'] == bns)
+    bias_files.dropna(how='all', inplace=True)
     for date in dates:
         year, month, day = int(date[0:4]), int(date[4:6]), int(date[6:])
         jd1, jd2 = gcal2jd(year, month, day)
         jddate = jd1 + jd2
-
-        filter1 = cal_files['type'] == 'Bias Frame'
-        filter2 = cal_files['binning'] == bns
-        bias_files = cal_files.where(filter1 & filter2)
-        bias_files.dropna(how='all', inplace=True)
         bdates = bias_files['JD'].tolist()
         bdates = np.unique(bdates)
         biasdate = min(bdates, key=lambda x: abs(int(x) - jddate))

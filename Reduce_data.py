@@ -1,13 +1,9 @@
-import sys, os, glob
+import glob
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from astropy.io import fits
-import robust as rb
-#from length import *
-import math
 from tqdm import tqdm
-from jdcal import gcal2jd, jd2gcal
+from jdcal import jd2gcal
 
 datapath = raw_input('Type the exact path to the directory containing your data:\n' +
                      '\nexample, C:\Dropbox\User\Object\n')

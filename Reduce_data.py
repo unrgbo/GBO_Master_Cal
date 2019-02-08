@@ -10,13 +10,13 @@ from tqdm import tqdm
 from jdcal import gcal2jd, jd2gcal
 
 datapath = raw_input('Type the exact path to the directory containing your data:\n' +
-                     '\nexample, C:\Dropbox\User\Object')
+                     '\nexample, C:\Dropbox\User\Object\n')
 
 prefix = raw_input(('Type the prefix for your image file names\n' +
-                    '\nexample, NGC1976'))
+                    '\nexample, NGC1976\n'))
 
 suffix = raw_input(('Type the suffix for your image file names\n' +
-                    '\nexample, .fts'))
+                    '\nexample, .fts\n'))
 
 sjd = 2400000.5
 
@@ -70,12 +70,12 @@ for fname in datafiles:
         binning = str(hdr['XBINNING']) + 'X' + str(hdr['YBINNING'])
 
         cal_files = cal_files.where(cal_files['binning'] == binning)
-        cal_files.dropna(how='all', inplace=True)
 
         print 'Parsing Bias Data'
         bias_files = cal_files.where(cal_files['type'] == 'Bias Frame')
         bias_files.dropna(how='all', inplace=True)
-        biasdates = np.unique(bias_files.loc[:'JD'])
+        biasdates = bias_files['JD'].tolist()
+        biasdates = np.unique(biasdates)
         biasdate = min(biasdates, key=lambda x: abs(int(x) - date))
         year, month, day, sec = jd2gcal(sjd, (biasdate - sjd))
         year, month, day = str(year), str(month), str(day)
@@ -88,9 +88,12 @@ for fname in datafiles:
         bias = fits.getdata(biaspath)
         print 'Using {}'.format(biaspath)
 
-        dark_files = cal_files.where(cal_files['type'] == 'Dark Frame' & cal_files['exp'] == exp)
+        filter1 = cal_files['type'] == 'Dark Frame'
+        filter2 = cal_files['exp'] == exp
+        dark_files = cal_files.where(filter1 & filter2)
         dark_files.dropna(how='all', inplace=True)
-        darkdates = np.unique(dark_files.loc[:'JD'])
+        darkdates = dark_files['JD'].tolist()
+        darkdates = np.unique(darkdates)
         darkdate = min(darkdates, key=lambda x: abs(int(x) - date))
         year, month, day, sec = jd2gcal(sjd, (darkdate - sjd))
         year, month, day = str(year), str(month), str(day)
@@ -103,9 +106,12 @@ for fname in datafiles:
         dark = fits.getdata(darkpath)*int(exp)
         print 'Using {} '.format(darkpath)
 
-        flat_files = cal_files.where(cal_files['type'] == 'Flat Field' & cal_files['filter'] == band)
+        filter1 = cal_files['type'] == 'Flat Field'
+        filter2 = cal_files['filter'] == band
+        flat_files = cal_files.where(filter1 & filter2)
         flat_files.dropna(how='all', inplace=True)
-        flatdates = np.unique(flat_files.loc[:'JD'])
+        flatdates = flat_files['JD'].tolist()
+        flatdates = np.unique(flatdates)
         flatdate = min(flatdates, key=lambda x: abs(int(x) - date))
         year, month, day, sec = jd2gcal(sjd, (flatdate - sjd))
         year, month, day = str(year), str(month), str(day)

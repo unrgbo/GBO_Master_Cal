@@ -120,13 +120,12 @@ for fname in datafiles:
         flatpath = '{}{}\\Flat\\{}\\master_flat_{}_{}_{}.fits'.format(mstdir, binning, flattag, flattag, binning, band)
         flat = fits.getdata(flatpath)
 
-        print '\nCalibrating {}\n'.format(fname)
-        print 'Using {}\n{}\n{}\n'.format(biaspath, darkpath, flatpath)
+        print '\nCalibrating: {}\n'.format(fname)
+        print 'Using the calibration frames:\n {}\n{}\n{}\n'.format(biaspath, darkpath, flatpath)
         dataout = (data - bias - dark)/flat
         calhdr = hdr
         calhdr ['HISTORY'] = 'Image reduction performed by Great Basin Observatory'
-        calname = fname.replace('.fts', '_cal.fts')
+        calname = fname.replace('.fts', '_calibrated.fts')
+        calname = fname.replace(prefix, prefix+ '_calibrated\\' +prefix)
         fits.writeto(calname, dataout, calhdr)
-
-
 

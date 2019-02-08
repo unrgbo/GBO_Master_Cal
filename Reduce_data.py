@@ -18,62 +18,105 @@ prefix = raw_input(('Type the prefix for your image file names\n' +
 suffix = raw_input(('Type the suffix for your image file names\n' +
                     '\nexample, .fts'))
 
-msdir = 'Z:\Calibration Master Frames\\'
+sjd = 2400000.5
+
+mstdir = 'Z:\Calibration Master Frames\\'
 
 caltypes = ['Bias', 'Dark', 'Flat']
 
-done_files = pd.read_pickle(mstdir + 'all_files.pkl')
-
 datafiles = glob.glob(datapath + '\\{}*{}'.format(prefix, suffix))
 
+names = []
+binning = []
+JD = []
+exposure = []
+bands = []
+bad_files = []
+for fname in tqdm(datafiles):
+    try:
+        with fits.open(fname) as hdu:
+            names.append(fname)
+            binning.append(str(hdu[0].header['XBINNING']) + 'X' + str(hdu[0].header['YBINNING']))
+            JD.append(int(hdu[0].header['JD']))
+            exposure.append(str(int(hdu[0].header['EXPOSURE'])))
+            bands.append(hdu[0].header['FILTER'])
+    except:
+        print '\nThe file: {}\nIs missing key header information'.format(fname)
+        bad_files.append(fname)
 
+print '\nHere is a list of the files that raised errors:\n'
+print bad_files
 
-dates = []
-i = 0
-for type in caltypes:
-    type = done_files.where(all_files['type'] == '{} Frame'.format(type))
-    type.dropna(how='all', inplace=True)
-    dates[i] = np.unique(type.loc[:, 'JD'])
-    dates[i] = [int(x) for x in dates]
-    i += 1
+d = {'name': names, 'binning': binning, 'JD': JD, 'exp': exposure, 'filter': bands}
+dataframe = pd.DataFrame(data=d)
 
-biasdates = dates[0]
-darkdates = dates[1]
-flatdates = dates[2]
+exposures = np.unique(dataframe.loc[:,'exp'])
+bands = np.unique(dataframe.loc[:,'filter'])
+bins = np.unique(dataframe.loc[:,'binning'])
 
+print 'Found data with {} binning, {} filters, and {} exposure times'.format(bins, bands, exposures)
 
-try:
-    caldates = []
-    print '\nChecking given path\n'
-    data_files = []
-    for path, subdirs, files in os.walk(datapath):
-        for name in files:
-            if name.endswith(suffix) and name.startswith(prefix):
-                data_files.append(os.path.join(path, name))
-    print '\nFound {} files in {}'.format(len(list_of_files), datapath)
+print 'Beginning reduction'
 
+cal_files = pd.read_pickle(mstdir + 'all_files.pkl')
 
-    cal_list
+for fname in datafiles:
+    with fits.open(fname) as hdu:
+        data, hdr = hdu[0].data, hdu[0].header
 
-    for root, dirs, files in os.walk(datapath):
-        for file in files:
-            if file.endswith(".fits"):
-                caldates.append(root.split('\\')[-1])
+        date = int(hdr['JD'])
+        exp = str(int(hdr['EXPOSURE']))
+        band = hdr['FILTER']
+        binning = str(hdr['XBINNING']) + 'X' + str(hdr['YBINNING'])
 
+        cal_files = cal_files.where(cal_files['binning'] == binning)
+        cal_files.dropna(how='all', inplace=True)
 
-    types = []
-    names = []
-    temp = []
-    binning = []
-    JD = []
-    exposure = []
-    bands = []
-    bad_files = []
-    no_temp = []
+        print 'Parsing Bias Data'
+        bias_files = cal_files.where(cal_files['type'] == 'Bias Frame')
+        bias_files.dropna(how='all', inplace=True)
+        biasdates = np.unique(bias_files.loc[:'JD'])
+        biasdate = min(biasdates, key=lambda x: abs(int(x) - date))
+        year, month, day, sec = jd2gcal(sjd, (biasdate - sjd))
+        year, month, day = str(year), str(month), str(day)
+        if len(month) == 1:
+            month = '0' + month
+        if len(day) == 1:
+            day = '0' + day
+        biastag = year + month + day
+        biaspath = '{}{}\\Bias\\{}\\master_bias_{}_{}.fits'.format(mstdir, binning, biastag, biastag, binning)
+        bias = fits.getdata(biaspath)
+        print 'Using {}'.format(biaspath)
 
+        dark_files = cal_files.where(cal_files['type'] == 'Dark Frame' & cal_files['exp'] == exp)
+        dark_files.dropna(how='all', inplace=True)
+        darkdates = np.unique(dark_files.loc[:'JD'])
+        darkdate = min(darkdates, key=lambda x: abs(int(x) - date))
+        year, month, day, sec = jd2gcal(sjd, (darkdate - sjd))
+        year, month, day = str(year), str(month), str(day)
+        if len(month) == 1:
+            month = '0' + month
+        if len(day) == 1:
+            day = '0' + day
+        darktag = year + month + day
+        darkpath = '{}{}\\Dark\\{}\\master_dark_{}_{}_{}.fits'.format(mstdir, binning, darktag, darktag, binning, exp)
+        dark = fits.getdata(darkpath)*int(exp)
+        print 'Using {} '.format(darkpath)
 
+        flat_files = cal_files.where(cal_files['type'] == 'Flat Field' & cal_files['filter'] == band)
+        flat_files.dropna(how='all', inplace=True)
+        flatdates = np.unique(flat_files.loc[:'JD'])
+        flatdate = min(flatdates, key=lambda x: abs(int(x) - date))
+        year, month, day, sec = jd2gcal(sjd, (flatdate - sjd))
+        year, month, day = str(year), str(month), str(day)
+        if len(month) == 1:
+            month = '0' + month
+        if len(day) == 1:
+            day = '0' + day
+        flattag = year + month + day
+        flatpath = '{}{}\\Flat\\{}\\master_flat_{}_{}_{}.fits'.format(mstdir, binning, flattag, flattag, binning, band)
+        flat = fits.getdata(flatpath)
+        print 'Using {} '.format(flatpath)
 
-except:
-    print '\nCould not find {}'.format(datapath)
 
 

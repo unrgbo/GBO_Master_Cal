@@ -30,25 +30,20 @@ outpath = 'C:\Users\user\Desktop\Test_out'
 if not os.path.exists(outpath):
     os.mkdir(outpath)
 
-
 cal_files = pd.DataFrame()
 cal_files = pd.read_pickle(mstdir+'all_files.pkl')
 
 
-bias_files = cal_files.where(cal_files['type'] == 'Bias Frame')
-bias_files.dropna(how='all', inplace=True)
-
-
-biasdates = []
-biaspaths = []
 for bns in bins:
-    files = bias_files.where(bias_files['binning'] == bns)
-    files.dropna(how='all', inplace=True)
+    filter1 = cal_files['type'] == 'Bias Frame'
+    filter2 = cal_files['binning'] == bns
+    bias_files = cal_files.where(filter1 & filter2)
+    bias_files.dropna(how='all', inplace=True)
     for date in dates:
         year, month, day = int(date[0:4]), int(date[4:6]), int(date[6:])
         jd1, jd2 = gcal2jd(year, month, day)
         jddate = jd1 + jd2
-        bdates = files['JD'].tolist()
+        bdates = bias_files['JD'].tolist()
         bdates = np.unique(bdates)
         biasdate = min(bdates, key=lambda x: abs(int(x) - jddate))
         year, month, day, sec = jd2gcal(sjd, (biasdate - sjd))

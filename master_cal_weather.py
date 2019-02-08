@@ -25,7 +25,6 @@ from jdcal import gcal2jd, jd2gcal
 # =============================================================================
 def make_cals(bias=False,dark=False,flat=False,
               bins=['1X1','2X2','3X3','4X4'],
-              exposures=['030','060','120','180','240','300','600'],
               filters=['B','Blue',"g'",'Grating','Green','Ha','I',"i'",
                        'Luminance','OIII','R',"r'",'Red','SII','V','Y',"z'"],
               root ='Z:\Calibration Files',
@@ -274,6 +273,8 @@ def make_cals(bias=False,dark=False,flat=False,
         
         dark_files = all_files.where(all_files['type'] == 'Dark Frame')
         dark_files.dropna(how='all',inplace=True)
+
+        exposures = np.unique(dark_files.loc[:,'exp'])
 
         del all_files
 

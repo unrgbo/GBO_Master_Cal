@@ -35,23 +35,41 @@ cal_files = pd.DataFrame()
 cal_files = pd.read_pickle(mstdir+'all_files.pkl')
 
 
-bias_files = cal_files.where(cal_files['type'] == 'Bias Frame')
-bias_files.dropna(how='all', inplace=True)
+
 dark_files = cal_files.where(cal_files['type'] == 'Dark Frame')
 dark_files.dropna(how='all', inplace=True)
 flat_files = cal_files.where(cal_files['type'] == 'Flat Field')
 flat_files.dropna(how='all', inplace=True)
 
-bdates = bias_files['JD'].tolist()
-bdates = np.unique(bdates)
+
 biasdates = []
-for date in dates:
-    year, month, day = int(date[0:4]), int(date[4:6]), int(date[6:])
-    jd1, jd2 = gcal2jd(year, month, day)
-    jddate = jd1 + jd2
-    biasdate = min(bdates, key=lambda x: abs(int(x) - jddate))
-    biasdates.append(biasdate)
 biaspaths = []
+for bns in bins:
+    for date in dates:
+        year, month, day = int(date[0:4]), int(date[4:6]), int(date[6:])
+        jd1, jd2 = gcal2jd(year, month, day)
+        jddate = jd1 + jd2
+
+        filter1 = cal_files['type'] == 'Bias Frame'
+        filter2 = cal_files['binning'] == bns
+        bias_files = cal_files.where(filter1 & filter2)
+        bias_files.dropna(how='all', inplace=True)
+        bdates = bias_files['JD'].tolist()
+        bdates = np.unique(bdates)
+        biasdate = min(bdates, key=lambda x: abs(int(x) - jddate))
+        year, month, day, sec = jd2gcal(sjd, (biasdate - sjd))
+        year, month, day = str(year), str(month), str(day)
+        if len(month) == 1:
+            month = '0' + month
+        if len(day) == 1:
+            day = '0' + day
+        tagdate = year + month + day
+        sourcepath = '{}{}\\Bias\\{}\\master_bias_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns)
+        shutil.copy(sourcepath, outpath)
+
+
+
+
 for date in biasdates:
     for bns in bins:
         year, month, day, sec = jd2gcal(sjd, (date - sjd))

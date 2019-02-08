@@ -213,9 +213,8 @@ def make_cals(bias=False,dark=False,flat=False,
 
         if len(newdates) == 0:
             print '\nDid not find any new dates with Bias Frames\n'
-            pass
-
-        print '\nBeginning master bias creation for new dates\n'
+        else:
+            print '\nBeginning master bias creation for new dates\n'
         for date in tqdm(newdates):
             year, month, day, sec = jd2gcal(sjd, (date - sjd))
             year, month, day = str(year), str(month), str(day)
@@ -263,7 +262,7 @@ def make_cals(bias=False,dark=False,flat=False,
                     print 'Creating master_bias: binning is {}, date is {}'.format(bns, tagdate)
                     master_bias(files=fnames, outdir=biasdir, tag=tagdate+'_'+bns)
                 else:
-                    print 'No Bias Frames foun'
+                    print 'No Bias Frames found'
         del bias_files
     
     if dark:
@@ -298,11 +297,10 @@ def make_cals(bias=False,dark=False,flat=False,
 
         newdates = [x for x in dates if x not in donedates]
 
-        if len(newdates) > 0:
+        if len(newdates) == 0:
             print '\nDid not find any new dates with Dark Frames\n'
-            pass
-
-        print '\nBeginning master dark creation for new dates\n'
+        else:
+            print '\nBeginning master dark creation for new dates\n'
         for date in tqdm(newdates):
             year, month, day, sec = jd2gcal(sjd, (date - sjd))
             year, month, day = str(year), str(month), str(day)
@@ -389,9 +387,8 @@ def make_cals(bias=False,dark=False,flat=False,
 
         if len(newdates) == 0:
             print '\nDid not find any new dates with Flat Frames\n'
-            pass
-
-        print '\nBeginning master flat creation for new dates\n'
+        else:
+            print '\nBeginning master flat creation for new dates\n'
         for date in tqdm(newdates):
             year, month, day, sec = jd2gcal(sjd, (date - sjd))
             year, month, day = str(year), str(month), str(day)

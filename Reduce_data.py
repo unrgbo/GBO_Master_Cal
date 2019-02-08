@@ -71,7 +71,6 @@ for fname in datafiles:
 
         cal_files = cal_files.where(cal_files['binning'] == binning)
 
-        print 'Parsing Bias Data'
         bias_files = cal_files.where(cal_files['type'] == 'Bias Frame')
         bias_files.dropna(how='all', inplace=True)
         biasdates = bias_files['JD'].tolist()
@@ -103,7 +102,7 @@ for fname in datafiles:
             day = '0' + day
         darktag = year + month + day
         darkpath = '{}{}\\Dark\\{}\\master_dark_{}_{}_{}.fits'.format(mstdir, binning, darktag, darktag, binning, exp)
-        dark = fits.getdata(darkpath)*int(exp)
+        dark = (fits.getdata(darkpath) - bias) * int(exp)
         print 'Using {} '.format(darkpath)
 
         filter1 = cal_files['type'] == 'Flat Field'
@@ -123,6 +122,14 @@ for fname in datafiles:
         flatpath = '{}{}\\Flat\\{}\\master_flat_{}_{}_{}.fits'.format(mstdir, binning, flattag, flattag, binning, band)
         flat = fits.getdata(flatpath)
         print 'Using {} '.format(flatpath)
+
+        print '\nCalibrating {}\n'.format(fname)
+        print 'Using {}\n{}\n{}\n'.format(biaspath, darkpath, flatpath)
+        dataout = (data - bias - dark)/flat
+        calhdr = hdr
+        calhdr ['HISTORY'] = 'Image reduction performed by Great Basin Observatory'
+        calname = fname.replace('.fts', '_cal.fts')
+        fits.writeto(calname, dataout, calhdr)
 
 
 

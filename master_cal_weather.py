@@ -292,8 +292,10 @@ def make_cals(bias=False,dark=False,flat=False,
             tagdate = year + month + day
 
             for bns in bins:
-                if os.path.exists(mstdir+'{}\\Dark\\{}'.format(bns, tagdate)):
-                    donedates.append(date)
+                for exp in exposures:
+                    darkpath = '{}{}\\Dark\\{}\\master_dark_{}_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns, exp)
+                    if os.path.exists(mstdir+'{}\\Dark\\{}'.format(bns, tagdate)):
+                        donedates.append(date)
 
         newdates = [x for x in dates if x not in donedates]
 

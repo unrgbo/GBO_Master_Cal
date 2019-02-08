@@ -19,7 +19,6 @@ exposures = input('What exposure times do you need\n'
                   '*Must enter as a list of strings*\n'
                   'Example: ["030", "300"]\n')
 
-
 print dates, bins, filters, exposures
 print type(dates), type(bins), type(filters), type(exposures)
 
@@ -35,11 +34,11 @@ cal_files = pd.read_pickle(mstdir+'all_files.pkl')
 
 
 for bns in bins:
-    filter1 = cal_files['type'] == 'Bias Frame'
-    filter2 = cal_files['binning'] == bns
-    bias_files = cal_files.where(filter1 & filter2)
-    bias_files.dropna(how='all', inplace=True)
     for date in dates:
+        filter1 = cal_files['type'] == 'Bias Frame'
+        filter2 = cal_files['binning'] == bns
+        bias_files = cal_files.where(filter1 & filter2)
+        bias_files.dropna(how='all', inplace=True)
         year, month, day = int(date[0:4]), int(date[4:6]), int(date[6:])
         jd1, jd2 = gcal2jd(year, month, day)
         jddate = jd1 + jd2
@@ -59,3 +58,59 @@ for bns in bins:
         except:
             sourcepath = '{}{}\Bias\{}\master_bias_{}_{}_1.fits'.format(mstdir, bns, tagdate, tagdate, bns)
             shutil.copy(sourcepath, outpath)
+
+for bns in bins:
+    for exp in exposures:
+        for date in dates:
+            filter1 = cal_files['type'] == 'Dark Frame'
+            filter2 = cal_files['binning'] == bns
+            filter3 = cal_files['exp'] == exp
+            dark_files = cal_files.where(filter1 & filter2 & filter3)
+            dark_files.dropna(how='all', inplace=True)
+            year, month, day = int(date[0:4]), int(date[4:6]), int(date[6:])
+            jd1, jd2 = gcal2jd(year, month, day)
+            jddate = jd1 + jd2
+            ddates = dark_files['JD'].tolist()
+            ddates = np.unique(ddates)
+            darkdate = min(ddates, key=lambda x: abs(int(x) - jddate))
+            year, month, day, sec = jd2gcal(sjd, (darkdate - sjd))
+            year, month, day = str(year), str(month), str(day)
+            if len(month) == 1:
+                month = '0' + month
+            if len(day) == 1:
+                day = '0' + day
+            tagdate = year + month + day
+            try:
+                sourcepath = '{}{}\Dark\{}\master_dark_{}_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns, exp)
+                shutil.copy(sourcepath, outpath)
+            except:
+                sourcepath = '{}{}\Dark\{}\master_dark_{}_{}_{}_1.fits'.format(mstdir, bns, tagdate, tagdate, bns, exp)
+                shutil.copy(sourcepath, outpath)
+
+for bns in bins:
+    for band in filters:
+        for date in dates:
+            filter1 = cal_files['type'] == 'Flat Field'
+            filter2 = cal_files['binning'] == bns
+            filter3 = cal_files['filter'] == band
+            flat_files = cal_files.where(filter1 & filter2 & filter3)
+            flat_files.dropna(how='all', inplace=True)
+            year, month, day = int(date[0:4]), int(date[4:6]), int(date[6:])
+            jd1, jd2 = gcal2jd(year, month, day)
+            jddate = jd1 + jd2
+            fdates = flat_files['JD'].tolist()
+            fdates = np.unique(fdates)
+            flatdate = min(fdates, key=lambda x: abs(int(x) - jddate))
+            year, month, day, sec = jd2gcal(sjd, (flatdate - sjd))
+            year, month, day = str(year), str(month), str(day)
+            if len(month) == 1:
+                month = '0' + month
+            if len(day) == 1:
+                day = '0' + day
+            tagdate = year + month + day
+            try:
+                sourcepath = '{}{}\Flat\{}\master_flat_{}_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns, band)
+                shutil.copy(sourcepath, outpath)
+            except:
+                sourcepath = '{}{}\Flat\{}\master_flat_{}_{}_{}_1.fits'.format(mstdir, bns, tagdate, tagdate, bns, band)
+                shutil.copy(sourcepath, outpath)

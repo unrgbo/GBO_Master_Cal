@@ -28,7 +28,8 @@ def make_cals(bias=False,dark=False,flat=False,
               filters=['B','Blue',"g'",'Grating','Green','Ha','I',"i'",
                        'Luminance','OIII','R',"r'",'Red','SII','V','Y',"z'"],
               root ='Z:\Calibration Files',
-              suffix='.fts'):
+              suffix = '.fts',
+              clobber = False):
               #root ='/Users/jfausett/Dropbox/Calibration Files/',
               #suffix='.fts'):
               #root = '/Users/jakrin/Calibration Files/',
@@ -111,7 +112,7 @@ def make_cals(bias=False,dark=False,flat=False,
                     binning.append(str(hdu[0].header['XBINNING'])+'X'+str(hdu[0].header['YBINNING']))
                     JD.append(int(hdu[0].header['JD']))
                     try:
-                        exposure.append(str(int(hdu[0].header['EXPOSURE'])))
+                        exposure.append(str(int(hdu[0].header['EXPOSURE'])).zfill(3))
                     except:
                         exposure.append(np.nan)
                     try:
@@ -151,7 +152,7 @@ def make_cals(bias=False,dark=False,flat=False,
                     binning.append(str(hdu[0].header['XBINNING'])+'X'+str(hdu[0].header['YBINNING']))
                     JD.append(int(hdu[0].header['JD']))
                     try:
-                        exposure.append(str(int(hdu[0].header['EXPOSURE'])))
+                        exposure.append(str(int(hdu[0].header['EXPOSURE'])).zfill(3))
                     except:
                         exposure.append(np.nan)
                     try:
@@ -187,29 +188,29 @@ def make_cals(bias=False,dark=False,flat=False,
         all_files = pd.read_pickle(mstdir+'all_files.pkl')
 
         bias_files = all_files.where(all_files['type'] == 'Bias Frame')
-        bias_files.dropna(how='all', inplace=True)
+        bias_files.dropna(how='any', inplace=True)
         
         del all_files
 
-        dates = np.unique(bias_files.loc[:, 'JD'])
+        dates = bias_files['JD'].tolist()
         dates = [int(x) for x in dates]
+        dates = np.unique(dates)
 
         print '\nParsing existing data frames to determine new Bias data\n'
         donedates = []
         for date in tqdm(dates):
             year, month, day, sec = jd2gcal(sjd, (date-sjd))
-            year, month, day = str(year), str(month), str(day)
-            if len(month) == 1:
-                month = '0'+month
-            if len(day) == 1:
-                day = '0'+day
+            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
             tagdate = year + month + day
 
             for bns in bins:
-                if os.path.exists(mstdir+'{}\\Bias\\{}'.format(bns, tagdate)):
+                biaspath = '{}{}\\Bias\\{}\\master_bias_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns)
+                if os.path.exists(biaspath):
                     donedates.append(date)
 
         newdates = [x for x in dates if x not in donedates]
+        if clobber:
+            newdates = dates
 
         if len(newdates) == 0:
             print '\nDid not find any new dates with Bias Frames\n'
@@ -217,13 +218,8 @@ def make_cals(bias=False,dark=False,flat=False,
             print '\nBeginning master bias creation for new dates\n'
         for date in tqdm(newdates):
             year, month, day, sec = jd2gcal(sjd, (date - sjd))
-            year, month, day = str(year), str(month), str(day)
-            if len(month) == 1:
-                month = '0' + month
-            if len(day) == 1:
-                day = '0' + day
+            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
             tagdate = year + month + day
-
             for bns in bins:
                 biasdir = mstdir+bns+'\\Bias\\'+tagdate+'\\'
                 #biasdir = mstdir+bns+'/Bias/'+tagdate+'/'
@@ -271,33 +267,33 @@ def make_cals(bias=False,dark=False,flat=False,
         all_files = pd.read_pickle(mstdir+'all_files.pkl')
         
         dark_files = all_files.where(all_files['type'] == 'Dark Frame')
-        dark_files.dropna(how='all',inplace=True)
+        dark_files.dropna(how='any',inplace=True)
 
-        exposures = np.unique(dark_files.loc[:,'exp'])
+        exposures = dark_files['exp'].tolist()
+        exposures = np.unique(exposures)
+        exposures = [str(int(x)).zfill(3) for x in exposures]
 
         del all_files
 
-        dates = np.unique(dark_files.loc[:,'JD'])
+        dates = dark_files['JD'].tolist()
         dates = [int(x) for x in dates]
+        dates = np.unique(dates)
 
         print '\nParsing existing data frames to determine new Dark data\n'
         donedates = []
         for date in tqdm(dates):
             year, month, day, sec = jd2gcal(sjd, (date-sjd))
-            year, month, day = str(year), str(month), str(day)
-            if len(month) == 1:
-                month = '0'+month
-            if len(day) == 1:
-                day = '0'+day
+            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
             tagdate = year + month + day
-
             for bns in bins:
                 for exp in exposures:
-                    darkpath = '{}{}\\Dark\\{}\\master_dark_{}_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns, exp)
-                    if os.path.exists(mstdir+'{}\\Dark\\{}'.format(bns, tagdate)):
+                    darkpath = '{}{}\\Dark\\{}'.format(mstdir, bns, tagdate)
+                    if os.path.exists(darkpath):
                         donedates.append(date)
 
         newdates = [x for x in dates if x not in donedates]
+        if clobber:
+            newdates = dates
 
         if len(newdates) == 0:
             print '\nDid not find any new dates with Dark Frames\n'
@@ -305,13 +301,8 @@ def make_cals(bias=False,dark=False,flat=False,
             print '\nBeginning master dark creation for new dates\n'
         for date in tqdm(newdates):
             year, month, day, sec = jd2gcal(sjd, (date - sjd))
-            year, month, day = str(year), str(month), str(day)
-            if len(month) == 1:
-                month = '0' + month
-            if len(day) == 1:
-                day = '0' + day
+            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
             tagdate = year + month + day
-
             for bns in bins:
                 for exp in exposures:
 
@@ -323,7 +314,7 @@ def make_cals(bias=False,dark=False,flat=False,
                     filter3 = dark_files['exp'] == exp
                         
                     files = dark_files.where(filter1 & filter2 & filter3)
-                    files.dropna(how='all',inplace=True)
+                    files.dropna(how='any',inplace=True)
                     
                     fnames = files['name'].tolist()
                     fct = len(fnames)
@@ -363,29 +354,29 @@ def make_cals(bias=False,dark=False,flat=False,
         all_files = pd.read_pickle(mstdir+'all_files.pkl')
         
         flat_files = all_files.where(all_files['type'] == 'Flat Field')
-        flat_files.dropna(how='all',inplace=True)     
+        flat_files.dropna(how='any',inplace=True)
         
         del all_files
 
-        dates = np.unique(flat_files.loc[:,'JD'])
+        dates = flat_files['JD'].tolist()
         dates = [int(x) for x in dates]
+        dates = np.unique(dates)
 
         print '\nParsing existing data frames to determine new Flat data\n'
         donedates = []
         for date in tqdm(dates):
             year, month, day, sec = jd2gcal(sjd, (date - sjd))
-            year, month, day = str(year), str(month), str(day)
-            if len(month) == 1:
-                month = '0' + month
-            if len(day) == 1:
-                day = '0' + day
+            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
             tagdate = year + month + day
-
             for bns in bins:
-                if os.path.exists(mstdir + '{}\\Flat\\{}'.format(bns, tagdate)):
+                flatpath = '{}{}\\Flat\\{}'.format(mstdir, bns, tagdate)
+                if os.path.exists(flatpath):
                     donedates.append(date)
 
         newdates = [x for x in dates if x not in donedates]
+
+        if clobber:
+            newdates = dates
 
         if len(newdates) == 0:
             print '\nDid not find any new dates with Flat Frames\n'
@@ -393,16 +384,10 @@ def make_cals(bias=False,dark=False,flat=False,
             print '\nBeginning master flat creation for new dates\n'
         for date in tqdm(newdates):
             year, month, day, sec = jd2gcal(sjd, (date - sjd))
-            year, month, day = str(year), str(month), str(day)
-            if len(month) == 1:
-                month = '0' + month
-            if len(day) == 1:
-                day = '0' + day
+            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
             tagdate = year + month + day
-
             for bns in bins:
                 for band in filters:
-
                     flatdir = mstdir + bns + '\\Flat\\' + tagdate + '\\'
                     # flatdir = mstdir+bns+'/Flat/'+tagdate+'/'
 

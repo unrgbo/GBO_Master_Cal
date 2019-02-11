@@ -188,7 +188,7 @@ def make_cals(bias=False,dark=False,flat=False,
         all_files = pd.read_pickle(mstdir+'all_files.pkl')
 
         bias_files = all_files.where(all_files['type'] == 'Bias Frame')
-        bias_files.dropna(how='any', inplace=True)
+        bias_files.dropna(how='all', inplace=True)
         
         del all_files
 
@@ -267,11 +267,13 @@ def make_cals(bias=False,dark=False,flat=False,
         all_files = pd.read_pickle(mstdir+'all_files.pkl')
         
         dark_files = all_files.where(all_files['type'] == 'Dark Frame')
-        dark_files.dropna(how='any',inplace=True)
+        dark_files.dropna(how='all',inplace=True)
 
         exposures = dark_files['exp'].tolist()
         exposures = np.unique(exposures)
         exposures = [str(int(x)).zfill(3) for x in exposures]
+
+        print exposures
 
         del all_files
 
@@ -354,7 +356,7 @@ def make_cals(bias=False,dark=False,flat=False,
         all_files = pd.read_pickle(mstdir+'all_files.pkl')
         
         flat_files = all_files.where(all_files['type'] == 'Flat Field')
-        flat_files.dropna(how='any',inplace=True)
+        flat_files.dropna(how='all',inplace=True)
         
         del all_files
 

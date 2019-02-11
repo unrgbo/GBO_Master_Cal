@@ -216,7 +216,7 @@ def make_cals(bias=False,dark=False,flat=False,
             print '\nDid not find any new dates with Bias Frames\n'
         else:
             print '\nBeginning master bias creation for new dates\n'
-        for date in tqdm(newdates):
+        for date in newdates:
             year, month, day, sec = jd2gcal(sjd, (date - sjd))
             year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
             tagdate = year + month + day

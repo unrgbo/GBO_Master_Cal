@@ -201,8 +201,12 @@ def make_cals(bias=False, dark=False, flat=False,
             try:
                 bands.append(fits.getval(fname, 'FILTER'))
             except:
-                bands.append(np.nan)
-                bad_files.append(fname)
+                if (fits.getval(fname, 'IMAGETYP') == 'Bias Frame' or
+                        fits.getval(fname, 'IMAGETYP') == 'Dark Frame'):
+                    bands.append('Not Flat')
+                else:
+                    bands.append(np.nan)
+                    bad_files.append(fname)
 
         print len(types), len(names), len(temp), len(binning), len(JD), len(exposure), len(bands)
 

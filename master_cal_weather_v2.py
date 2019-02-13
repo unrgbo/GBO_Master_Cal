@@ -132,8 +132,12 @@ def make_cals(bias=False, dark=False, flat=False,
                 try:
                     bands.append(fits.getval(fname, 'FILTER'))
                 except:
-                    bands.append(np.nan)
-                    bad_files.append(fname)
+                    if (fits.getval(fname, 'IMAGETYP') == 'Bias Frame' or
+                            fits.getval(fname, 'IMAGETYP') == 'Dark Frame'):
+                        bands.append('Not Flat')
+                    else:
+                        bands.append(np.nan)
+                        bad_files.append(fname)
 
             print len(types), len(names), len(temp), len(binning), len(JD), len(exposure), len(bands)
 
@@ -152,7 +156,7 @@ def make_cals(bias=False, dark=False, flat=False,
                 baddir = '{}bad_files\\'.format(mstdir)
                 if not os.path.exists(os.path.dirname(baddir)):
                     os.mkdir(os.path.dirname(baddir))
-                shutil.move(fname, fname.replace(root, baddir))
+                shutil.copy(fname, fname.replace(root, baddir))
 
             del types, names, temp, binning, JD, exposure, bands, bad_files
 
@@ -229,7 +233,7 @@ def make_cals(bias=False, dark=False, flat=False,
             baddir = baddir.replace(root, '{}bad_files\\'.format(mstdir))
             if not os.path.exists(baddir):
                 os.mkdir(baddir)
-            shutil.move(fname, fname.replace(root, '{}bad_files\\'.format(mstdir)))
+            shutil.copy(fname, fname.replace(root, '{}bad_files\\'.format(mstdir)))
 
         del types, names, temp, binning, JD, exposure, bands, bad_files
 

@@ -221,10 +221,11 @@ def make_cals(bias=False, dark=False, flat=False,
         all_files.to_pickle('{}all_files.pkl'.format(mstdir))
 
         for fname in bad_files:
-            badpath = fname.replace(root, '{}bad_files\\'.format(mstdir))
-            if not os.path.exists(os.path.dirname(badpath)):
-                os.mkdir(os.path.dirname(badpath))
-            shutil.move(fname, badpath)
+            baddir = os.path.dirname(fname)
+            baddir = baddir.replace(root, '{}bad_files\\'.format(mstdir))
+            if not os.path.exists(baddir):
+                os.mkdir(baddir)
+            shutil.move(fname, fname.replace(root, '{}bad_files\\'.format(mstdir)))
 
         del types, names, temp, binning, JD, exposure, bands, bad_files
 

@@ -276,24 +276,24 @@ def make_cals(bias=False, dark=False, flat=False,
                     pass
                 elif fct > 35 and fct <= 50 and binning == '1X1':
                     sub_frames = [fnames[x:x + 15] for x in xrange(0, len(fnames), 15)]
-                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(binning, tagdate)
+                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(binning, date)
                     if not os.path.exists(biasdir):
                         os.makedirs(biasdir)
                     for i in range(3):
-                        master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate + '_' + binning + '_%d' % (i + 1))
+                        master_bias(files=sub_frames[i], outdir=biasdir, tag=date + '_' + binning + '_%d' % (i + 1))
                 elif fct >= 20 and fct <= 35 and binning == '1X1':
                     sub_frames = [fnames[x * (fct / 2):(x + 1) * (fct / 2)] for x in
                                   range((len(fnames) + (fct / 2) - 1) // (fct / 2))]
-                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(binning, tagdate)
+                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(binning, date)
                     if not os.path.exists(biasdir):
                         os.makedirs(biasdir)
                     for i in range(2):
-                        master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate + '_' + binning + '_%d' % (i + 1))
+                        master_bias(files=sub_frames[i], outdir=biasdir, tag=date + '_' + binning + '_%d' % (i + 1))
                 elif fct > 1:
                     if not os.path.exists(biasdir):
                         os.makedirs(biasdir)
-                    print 'Creating master_bias: binning is {}, date is {}'.format(binning, tagdate)
-                    master_bias(files=fnames, outdir=biasdir, tag=tagdate + '_' + binning)
+                    print 'Creating master_bias: binning is {}, date is {}'.format(binning, date)
+                    master_bias(files=fnames, outdir=biasdir, tag=date + '_' + binning)
                 else:
                     print 'No Bias Frames found'
 

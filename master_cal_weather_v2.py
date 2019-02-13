@@ -98,34 +98,49 @@ def make_cals(bias=False, dark=False, flat=False,
         if len(new_list) > 0:
             print 'Creating dataframe for new files'
             for fname in tqdm(new_list):
+                names.append(fname)
                 try:
-                    with fits.open(fname) as hdu:
-                        names.append(fname)
-                        types.append(hdu[0].header['IMAGETYP'])
-                        binning.append(str(hdu[0].header['XBINNING']) + 'X' + str(hdu[0].header['YBINNING']))
-                        date = int(hdu[0].header['JD'])
-                        JD.append(date)
-                        year, month, day, sec = jd2gcal(sjd, (date-sjd))
-                        caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
-                        tagdate.append(caldate)
-                        try:
-                            temp.append(str(int(hdu[0].header['SET-TEMP'])))
-                        except:
-                            print 'No temperature keyword for ' + fname + '\nFilling with NaN'
-                            temp.append(np.nan)
-                            bad_files.append(fname)
-                        try:
-                            exposure.append(str(int(hdu[0].header['EXPOSURE'])).zfill(3))
-                        except:
-                            exposure.append(np.nan)
-                            bad_files.append(fname)
-                        try:
-                            bands.append(hdu[0].header['FILTER'])
-                        except:
-                            bands.append(np.nan)
-                            bad_files.append(fname)
+                    types.append(fits.getval(fname, 'IMAGETYP'))
                 except:
+                    types.append(np.nan)
                     bad_files.append(fname)
+                try:
+                    binning.append(str(fits.getval(fname, 'XBINNING')) + 'X' + str(fits.getval(fname, 'YBINNING')))
+                except:
+                    binning.append(np.nan)
+                    bad_files.append(fname)
+                try:
+                    date = int(fits.getval(fname, 'JD'))
+                    JD.append(date)
+                    year, month, day, sec = jd2gcal(sjd, (date - sjd))
+                    caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
+                    tagdate.append(caldate)
+                except:
+                    JD.append(np.nan)
+                    tagdate.append(np.nan)
+                    bad_files.append(fname)
+                try:
+                    temp.append(str(int(fits.getval(fname, 'SET-TEMP'))))
+                except:
+                    temp.append(np.nan)
+                    bad_files.append(fname)
+                try:
+                    exposure.append(str(int(fits.getval(fname, 'EXPOSURE'))).zfill(3))
+                except:
+                    exposure.append(np.nan)
+                    bad_files.append(fname)
+                try:
+                    bands.append(fits.getval(fname, 'FILTER'))
+                except:
+                    bands.append(np.nan)
+                    bad_files.append(fname)
+
+            print len(types), len(names), len(temp), len(binning), len(JD), len(exposure), len(bands)
+
+            if (len(names) != len(types) or len(names) != len(temp) or len(names) != len(binning)
+                    or len(names) != len(JD) or len(names) != len(exposure) or len(names) != len(bands)):
+                print 'Not all lists are the same length'
+                return
 
             d = {'type': types, 'name': names, 'temp': temp, 'binning':
                 binning, 'JD': JD, 'exp': exposure, 'filter': bands}
@@ -134,7 +149,10 @@ def make_cals(bias=False, dark=False, flat=False,
             new_files.dropna(how='any', inplace=True)
 
             for fname in bad_files:
-                shutil.move(fname, fname.replace(root, mstdir + 'bad_files\\'))
+                baddir = '{}bad_files\\'.format(mstdir)
+                if not os.path.exists(os.path.dirname(baddir)):
+                    os.mkdir(os.path.dirname(baddir))
+                shutil.move(fname, fname.replace(root, baddir))
 
             del types, names, temp, binning, JD, exposure, bands, bad_files
 
@@ -149,47 +167,61 @@ def make_cals(bias=False, dark=False, flat=False,
     else:
         print 'Creating master dataframe to parse \n'
         for fname in tqdm(list_of_files):
+            names.append(fname)
             try:
-                with fits.open(fname) as hdu:
-                    names.append(fname)
-                    types.append(hdu[0].header['IMAGETYP'])
-                    binning.append(str(hdu[0].header['XBINNING']) + 'X' + str(hdu[0].header['YBINNING']))
-                    date = int(hdu[0].header['JD'])
-                    JD.append(date)
-                    year, month, day, sec = jd2gcal(sjd, (date - sjd))
-                    caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
-                    tagdate.append(caldate)
-                    try:
-                        temp.append(str(int(hdu[0].header['SET-TEMP'])))
-                    except:
-                        print 'No temperature keyword for ' + fname + '\nFilling with NaN'
-                        temp.append(np.nan)
-                        bad_files.append(fname)
-                    try:
-                        exposure.append(str(int(hdu[0].header['EXPOSURE'])).zfill(3))
-                    except:
-                        exposure.append(np.nan)
-                        bad_files.append(fname)
-                    try:
-                        bands.append(hdu[0].header['FILTER'])
-                    except:
-                        bands.append(np.nan)
-                        bad_files.append(fname)
+                types.append(fits.getval(fname, 'IMAGETYP'))
             except:
+                types.append(np.nan)
+                bad_files.append(fname)
+            try:
+                binning.append(str(fits.getval(fname, 'XBINNING')) + 'X' + str(fits.getval(fname, 'YBINNING')))
+            except:
+                binning.append(np.nan)
+                bad_files.append(fname)
+            try:
+                date = int(fits.getval(fname, 'JD'))
+                JD.append(date)
+                year, month, day, sec = jd2gcal(sjd, (date - sjd))
+                caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
+                tagdate.append(caldate)
+            except:
+                JD.append(np.nan)
+                tagdate.append(np.nan)
+                bad_files.append(fname)
+            try:
+                temp.append(str(int(fits.getval(fname, 'SET-TEMP'))))
+            except:
+                temp.append(np.nan)
+                bad_files.append(fname)
+            try:
+                exposure.append(str(int(fits.getval(fname, 'EXPOSURE'))).zfill(3))
+            except:
+                exposure.append(np.nan)
+                bad_files.append(fname)
+            try:
+                bands.append(fits.getval(fname, 'FILTER'))
+            except:
+                bands.append(np.nan)
                 bad_files.append(fname)
 
+        print len(types), len(names), len(temp), len(binning), len(JD), len(exposure), len(bands)
+
+        if (len(names) != len(types) or len(names) != len(temp) or len(names) != len(binning)
+            or len(names) != len(JD) or len(names) != len(exposure) or len(names) != len(bands)):
+            print 'Not all lists are the same length'
+            return
 
         d = {'type': types, 'name': names, 'temp': temp, 'binning':
-            binning, 'JD': JD, 'exp': exposure, 'filter': bands}
+        binning, 'JD': JD, 'exp': exposure, 'filter': bands}
 
         all_files = pd.DataFrame(data=d)
         all_files.dropna(how='any', inplace=True)
 
         for fname in bad_files:
-            outdir = '{}bad_files\\'.format(mstdir)
-            if not os.path.exists(os.path.dirname(outdir)):
-                os.mkdir(os.path.dirname(outdir))
-            shutil.move(fname, fname.replace(root, outdir))
+            baddir = '{}bad_files\\'.format(mstdir)
+            if not os.path.exists(os.path.dirname(baddir)):
+                os.mkdir(os.path.dirname(baddir))
+            shutil.move(fname, fname.replace(root, baddir))
 
         del types, names, temp, binning, JD, exposure, bands, bad_files
 

@@ -217,16 +217,16 @@ def make_cals(bias=False, dark=False, flat=False,
         all_files = pd.DataFrame(data=d)
         all_files.dropna(how='any', inplace=True)
 
-        for fname in bad_files:
-            baddir = '{}bad_files\\'.format(mstdir)
-            if not os.path.exists(os.path.dirname(baddir)):
-                os.mkdir(os.path.dirname(baddir))
-            shutil.move(fname, fname.replace(root, baddir))
-
-        del types, names, temp, binning, JD, exposure, bands, bad_files
-
         print 'Writing out dataframe to : {}all_files.pkl'.format(mstdir)
         all_files.to_pickle('{}all_files.pkl'.format(mstdir))
+
+        for fname in bad_files:
+            badpath = fname.replace(root, '{}bad_files\\'.format(mstdir))
+            if not os.path.exists(os.path.dirname(badpath)):
+                os.mkdir(os.path.dirname(badpath))
+            shutil.move(fname, badpath)
+
+        del types, names, temp, binning, JD, exposure, bands, bad_files
 
         del all_files
 

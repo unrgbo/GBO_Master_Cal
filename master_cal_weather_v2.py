@@ -147,7 +147,7 @@ def make_cals(bias=False, dark=False, flat=False,
                 return
 
             d = {'type': types, 'name': names, 'temp': temp, 'binning':
-                binning, 'JD': JD, 'exp': exposure, 'filter': bands}
+                binning, 'JD': JD, 'tagdate': tagdate, 'exp': exposure, 'filter': bands}
 
             new_files = pd.DataFrame(data=d)
             new_files.dropna(how='any', inplace=True)
@@ -222,7 +222,7 @@ def make_cals(bias=False, dark=False, flat=False,
             return
 
         d = {'type': types, 'name': names, 'temp': temp, 'binning':
-        binning, 'JD': JD, 'exp': exposure, 'filter': bands}
+        binning, 'JD': JD, 'tagdate': tagdate, 'exp': exposure, 'filter': bands}
 
         all_files = pd.DataFrame(data=d)
         all_files.dropna(how='any', inplace=True)

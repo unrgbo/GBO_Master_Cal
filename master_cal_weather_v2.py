@@ -263,7 +263,6 @@ def make_cals(bias=False, dark=False, flat=False,
             for date in tqdm(dates):
                 biasdir = '{}{}\\Bias\\{}\\'.format(mstdir, binning, date)
 
-
                 files = bin.where(bin['tagdate'] == date)
                 files.dropna(how='all', inplace=True)
 
@@ -311,54 +310,23 @@ def make_cals(bias=False, dark=False, flat=False,
         dark_files = all_files.where(all_files['type'] == 'Dark Frame')
         dark_files.dropna(how='all', inplace=True)
 
-        exposures = dark_files['exp'].tolist()
-        exposures = np.unique(exposures)
-        exposures = [str(int(x)).zfill(3) for x in exposures]
-
-        print exposures
-
         del all_files
 
-        dates = dark_files['JD'].tolist()
-        dates = [int(x) for x in dates]
-        dates = np.unique(dates)
+        total_files = 0
+        bins = dark_files['binning'].unique()
+        for binning in bins:
+            bin = dark_files.where(dark_files['binning'] == binning)
+            bin.dropna(how='all', inplace=True)
+            exposures = bin['exp'].unique()
+            for exp in exposures:
+                dfiles = bin.where(bin['exp'] == exp)
+                dfiles.dropna(how='all', inplace=True)
+                dates = dfiles['tagdate'].unique()
+                for date in tqdm(dates):
+                    darkdir = '{}{}\\Dark\\{}\\'.format(mstdir, binning, date)
 
-        print '\nParsing existing data frames to determine new Dark data\n'
-        donedates = []
-        for date in tqdm(dates):
-            year, month, day, sec = jd2gcal(sjd, (date - sjd))
-            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
-            tagdate = year + month + day
-            for bns in bins:
-                for exp in exposures:
-                    darkpath = '{}{}\\Dark\\{}'.format(mstdir, bns, tagdate)
-                    if os.path.exists(darkpath):
-                        donedates.append(date)
-
-        newdates = [x for x in dates if x not in donedates]
-        if clobber:
-            newdates = dates
-
-        if len(newdates) == 0:
-            print '\nDid not find any new dates with Dark Frames\n'
-        else:
-            print '\nBeginning master dark creation for new dates\n'
-        for date in tqdm(newdates):
-            year, month, day, sec = jd2gcal(sjd, (date - sjd))
-            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
-            tagdate = year + month + day
-            for bns in bins:
-                for exp in exposures:
-
-                    darkdir = mstdir + bns + '\\Dark\\' + tagdate + '\\'
-                    # darkdir = mstdir+bns+'/Dark/'+tagdate+'/'
-
-                    filter1 = dark_files['binning'] == bns
-                    filter2 = dark_files['JD'] == date
-                    filter3 = dark_files['exp'] == exp
-
-                    files = dark_files.where(filter1 & filter2 & filter3)
-                    files.dropna(how='any', inplace=True)
+                    files = dfiles.where(dfiles['tagdate'] == date)
+                    files.dropna(how='all', inplace=True)
 
                     fnames = files['name'].tolist()
                     fct = len(fnames)
@@ -367,30 +335,30 @@ def make_cals(bias=False, dark=False, flat=False,
                         print 'There are %d total files\n' % fct
                         print 'Too many files to make master\n'
                         pass
-                    elif fct > 35 and fct <= 50 and bns == '1X1':
+                    elif fct > 35 and fct <= 50 and binning == '1X1':
                         print 'There are %d total files\n' % fct
                         sub_frames = [fnames[x:x + 15] for x in xrange(0, len(fnames), 15)]
-                        print 'Creating sub_master_dark: binning is {}, date is {}'.format(bns, tagdate)
+                        print 'Creating sub_master_dark: binning is {}, date is {}'.format(binning, date)
                         if not os.path.exists(darkdir):
                             os.makedirs(darkdir)
                         for i in range(3):
                             master_dark(files=sub_frames[i], outdir=darkdir,
-                                        tag=tagdate + '_' + bns + '_' + exp + '_%d' % (i + 1))
-                    elif fct >= 20 and fct <= 35 and bns == '1X1':
+                                        tag=date + '_' + binning + '_' + exp + '_%d' % (i + 1))
+                    elif fct >= 20 and fct <= 35 and binning == '1X1':
                         print 'There are %d total files\n' % fct
                         sub_frames = [fnames[x * (fct / 2):(x + 1) * (fct / 2)] for x in
                                       range((len(fnames) + (fct / 2) - 1) // (fct / 2))]
-                        print 'Creating sub_master_dark: binning is {}, date is {}'.format(bns, tagdate)
+                        print 'Creating sub_master_dark: binning is {}, date is {}'.format(binning, date)
                         if not os.path.exists(darkdir):
                             os.makedirs(darkdir)
                         for i in range(2):
                             master_dark(files=sub_frames[i], outdir=darkdir,
-                                        tag=tagdate + '_' + bns + '_' + exp + '_%d' % (i + 1))
+                                        tag=date + '_' + binning + '_' + exp + '_%d' % (i + 1))
                     elif fct > 1:
                         if not os.path.exists(darkdir):
                             os.makedirs(darkdir)
-                        print 'Creating master_dark: binning is {}, date is {}'.format(bns, tagdate)
-                        master_dark(files=fnames, outdir=darkdir, tag=tagdate + '_' + bns + '_' + exp)
+                        print 'Creating master_dark: binning is {}, date is {}'.format(binning, date)
+                        master_dark(files=fnames, outdir=darkdir, tag=date + '_' + binning + '_' + exp)
                     else:
                         print 'No Dark Frames found'
         del dark_files

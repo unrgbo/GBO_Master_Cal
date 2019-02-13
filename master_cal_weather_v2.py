@@ -153,10 +153,11 @@ def make_cals(bias=False, dark=False, flat=False,
             new_files.dropna(how='any', inplace=True)
 
             for fname in bad_files:
-                baddir = '{}bad_files\\'.format(mstdir)
-                if not os.path.exists(os.path.dirname(baddir)):
-                    os.mkdir(os.path.dirname(baddir))
-                shutil.copy(fname, fname.replace(root, baddir))
+                baddir = os.path.dirname(fname)
+                baddir = baddir.replace(root, '{}bad_files\\'.format(mstdir))
+                if not os.path.exists(baddir):
+                    os.mkdir(baddir)
+                shutil.copy(fname, fname.replace(root, '{}bad_files\\'.format(mstdir)))
 
             del types, names, temp, binning, JD, exposure, bands, bad_files
 

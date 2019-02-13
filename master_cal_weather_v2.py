@@ -86,9 +86,6 @@ def make_cals(bias=False, dark=False, flat=False,
     exposure = []
     bands = []
     bad_files = []
-    no_temp = []
-    no_exp = []
-    no_filter = []
 
     #  Determine weather or not a dataframe has already been created
     if os.path.exists(mstdir + 'all_files.pkl'):
@@ -143,7 +140,7 @@ def make_cals(bias=False, dark=False, flat=False,
 
             done_files = pd.concat([done_files, new_files], ignore_index=True)
 
-            print '\nWriting out new dataframe with %d files' % len(done_files)
+            print '\nWriting out new dataframe with {} files'.format(len(done_files))
             done_files.to_pickle(mstdir + 'all_files.pkl')
 
         del done_files, new_files
@@ -193,8 +190,8 @@ def make_cals(bias=False, dark=False, flat=False,
 
         del types, names, temp, binning, JD, exposure, bands, bad_files
 
-        print 'Writing out dataframe to : ' + mstdir + 'all_files.pkl'
-        all_files.to_pickle(mstdir + 'all_files.pkl')
+        print 'Writing out dataframe to : {}all_files.pkl'.format(mstdir)
+        all_files.to_pickle('{}all_files.pkl'.format(mstdir))
 
         del all_files
 
@@ -203,45 +200,22 @@ def make_cals(bias=False, dark=False, flat=False,
     if bias:
 
         all_files = pd.DataFrame()
-        all_files = pd.read_pickle(mstdir + 'all_files.pkl')
+        all_files = pd.read_pickle('{}all_files.pkl'.format(mstdir))
 
         bias_files = all_files.where(all_files['type'] == 'Bias Frame')
         bias_files.dropna(how='all', inplace=True)
 
         del all_files
 
-        # dates = bias_files['JD'].tolist()
-        # dates = [int(x) for x in dates]
-        # dates = np.unique(dates)
-        #
-        # print '\nParsing existing data frames to determine new Bias data\n'
-        # donedates = []
-        # for date in tqdm(dates):
-        #     year, month, day, sec = jd2gcal(sjd, (date - sjd))
-        #     year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
-        #     tagdate = year + month + day
-        #
-        #     for bns in bins:
-        #         biaspath = '{}{}\\Bias\\{}\\master_bias_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns)
-        #         if os.path.exists(biaspath):
-        #             donedates.append(date)
-        #
-        # newdates = [x for x in dates if x not in donedates]
-        # if clobber:
-        #     newdates = dates
-        #
-        # if len(newdates) == 0:
-        #     print '\nDid not find any new dates with Bias Frames\n'
-        # else:
-        #     print '\nBeginning master bias creation for new dates\n'
-
+        total_files = 0
         bins = bias_files['binning'].unique()
         for binning in bins:
             bin = bias_files.where(bias_files['binning'] == binning)
             bin.dropna(how='all', implace=True)
             dates = bin['tagdate'].unique()
-            for date in dates:
+            for date in tqdm(dates):
                 biasdir = '{}{}\\Bias\\{}\\'.format(mstdir, binning, date)
+
 
                 files = bin.where(bin['tagdate'] == date)
                 files.dropna(how='all', inplace=True)
@@ -253,28 +227,33 @@ def make_cals(bias=False, dark=False, flat=False,
                     print 'There are %d total files\n' % fct
                     print 'Too many files to make master\n'
                     pass
-                elif fct > 35 and fct <= 50 and bns == '1X1':
+                elif fct > 35 and fct <= 50 and binning == '1X1':
                     sub_frames = [fnames[x:x + 15] for x in xrange(0, len(fnames), 15)]
-                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(bns, tagdate)
+                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(binning, tagdate)
                     if not os.path.exists(biasdir):
                         os.makedirs(biasdir)
                     for i in range(3):
-                        master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate + '_' + bns + '_%d' % (i + 1))
-                elif fct >= 20 and fct <= 35 and bns == '1X1':
+                        master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate + '_' + binning + '_%d' % (i + 1))
+                elif fct >= 20 and fct <= 35 and binning == '1X1':
                     sub_frames = [fnames[x * (fct / 2):(x + 1) * (fct / 2)] for x in
                                   range((len(fnames) + (fct / 2) - 1) // (fct / 2))]
-                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(bns, tagdate)
+                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(binning, tagdate)
                     if not os.path.exists(biasdir):
                         os.makedirs(biasdir)
                     for i in range(2):
-                        master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate + '_' + bns + '_%d' % (i + 1))
+                        master_bias(files=sub_frames[i], outdir=biasdir, tag=tagdate + '_' + binning + '_%d' % (i + 1))
                 elif fct > 1:
                     if not os.path.exists(biasdir):
                         os.makedirs(biasdir)
-                    print 'Creating master_bias: binning is {}, date is {}'.format(bns, tagdate)
-                    master_bias(files=fnames, outdir=biasdir, tag=tagdate + '_' + bns)
+                    print 'Creating master_bias: binning is {}, date is {}'.format(binning, tagdate)
+                    master_bias(files=fnames, outdir=biasdir, tag=tagdate + '_' + binning)
                 else:
                     print 'No Bias Frames found'
+
+                total_files += fct
+
+        print 'There are {} files of type: "Bias Frame"'.format(len(bias_files))
+        print 'Processed {} bias files'.format(total_files)
         del bias_files
 
     if dark:
@@ -369,90 +348,90 @@ def make_cals(bias=False, dark=False, flat=False,
                         print 'No Dark Frames found'
         del dark_files
 
-    if flat:
-
-        all_files = pd.DataFrame()
-        all_files = pd.read_pickle(mstdir + 'all_files.pkl')
-
-        flat_files = all_files.where(all_files['type'] == 'Flat Field')
-        flat_files.dropna(how='all', inplace=True)
-
-        del all_files
-
-        dates = flat_files['JD'].tolist()
-        dates = [int(x) for x in dates]
-        dates = np.unique(dates)
-
-        print '\nParsing existing data frames to determine new Flat data\n'
-        donedates = []
-        for date in tqdm(dates):
-            year, month, day, sec = jd2gcal(sjd, (date - sjd))
-            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
-            tagdate = year + month + day
-            for bns in bins:
-                flatpath = '{}{}\\Flat\\{}'.format(mstdir, bns, tagdate)
-                if os.path.exists(flatpath):
-                    donedates.append(date)
-
-        newdates = [x for x in dates if x not in donedates]
-
-        if clobber:
-            newdates = dates
-
-        if len(newdates) == 0:
-            print '\nDid not find any new dates with Flat Frames\n'
-        else:
-            print '\nBeginning master flat creation for new dates\n'
-        for date in tqdm(newdates):
-            year, month, day, sec = jd2gcal(sjd, (date - sjd))
-            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
-            tagdate = year + month + day
-            for bns in bins:
-                for band in filters:
-                    flatdir = mstdir + bns + '\\Flat\\' + tagdate + '\\'
-                    # flatdir = mstdir+bns+'/Flat/'+tagdate+'/'
-
-                    filter1 = flat_files['binning'] == bns
-                    filter2 = flat_files['JD'] == date
-                    filter3 = flat_files['filter'] == band
-
-                    files = flat_files.where(filter1 & filter2 & filter3)
-                    files.dropna(how='all', inplace=True)
-
-                    fnames = files['name'].tolist()
-                    fct = len(fnames)
-
-                    if fct > 50:
-                        print 'There are %d total files\n' % fct
-                        print 'Too many files to make master\n'
-                        pass
-                    elif fct > 35 and fct <= 50 and bns == '1X1':
-                        print 'There are %d total files\n' % fct
-                        sub_frames = [fnames[x:x + 15] for x in xrange(0, len(fnames), 15)]
-                        print 'Creating sub_master_flat: binning is {}, date is {}'.format(bns, tagdate)
-                        if not os.path.exists(flatdir):
-                            os.makedirs(flatdir)
-                        for i in range(3):
-                            master_flat(files=sub_frames[i], outdir=flatdir, tag=tagdate + '_' + bns + '_%d' % (i + 1),
-                                        band=band)
-                    elif fct >= 20 and fct <= 35 and bns == '1X1':
-                        print 'There are %d total files\n' % fct
-                        sub_frames = [fnames[x * (fct / 2):(x + 1) * (fct / 2)] for x in
-                                      range((len(fnames) + (fct / 2) - 1) // (fct / 2))]
-                        print 'Creating sub_master_flat: binning is {}, date is {}'.format(bns, tagdate)
-                        if not os.path.exists(flatdir):
-                            os.makedirs(flatdir)
-                        for i in range(2):
-                            master_flat(files=sub_frames[i], outdir=flatdir, tag=tagdate + '_' + bns + '_%d' % (i + 1),
-                                        band=band)
-                    elif fct > 1:
-                        if not os.path.exists(flatdir):
-                            os.makedirs(flatdir)
-                        print '\nCreating master_flat: binning is {}, date is {}'.format(bns, tagdate)
-                        master_flat(files=fnames, outdir=flatdir, tag=tagdate + '_' + bns, band=band)
-                    else:
-                        print 'No Flat Frames found'
-        del flat_files
+    # if flat:
+    #
+    #     all_files = pd.DataFrame()
+    #     all_files = pd.read_pickle(mstdir + 'all_files.pkl')
+    #
+    #     flat_files = all_files.where(all_files['type'] == 'Flat Field')
+    #     flat_files.dropna(how='all', inplace=True)
+    #
+    #     del all_files
+    #
+    #     dates = flat_files['JD'].tolist()
+    #     dates = [int(x) for x in dates]
+    #     dates = np.unique(dates)
+    #
+    #     print '\nParsing existing data frames to determine new Flat data\n'
+    #     donedates = []
+    #     for date in tqdm(dates):
+    #         year, month, day, sec = jd2gcal(sjd, (date - sjd))
+    #         year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
+    #         tagdate = year + month + day
+    #         for bns in bins:
+    #             flatpath = '{}{}\\Flat\\{}'.format(mstdir, bns, tagdate)
+    #             if os.path.exists(flatpath):
+    #                 donedates.append(date)
+    #
+    #     newdates = [x for x in dates if x not in donedates]
+    #
+    #     if clobber:
+    #         newdates = dates
+    #
+    #     if len(newdates) == 0:
+    #         print '\nDid not find any new dates with Flat Frames\n'
+    #     else:
+    #         print '\nBeginning master flat creation for new dates\n'
+    #     for date in tqdm(newdates):
+    #         year, month, day, sec = jd2gcal(sjd, (date - sjd))
+    #         year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
+    #         tagdate = year + month + day
+    #         for bns in bins:
+    #             for band in filters:
+    #                 flatdir = mstdir + bns + '\\Flat\\' + tagdate + '\\'
+    #                 # flatdir = mstdir+bns+'/Flat/'+tagdate+'/'
+    #
+    #                 filter1 = flat_files['binning'] == bns
+    #                 filter2 = flat_files['JD'] == date
+    #                 filter3 = flat_files['filter'] == band
+    #
+    #                 files = flat_files.where(filter1 & filter2 & filter3)
+    #                 files.dropna(how='all', inplace=True)
+    #
+    #                 fnames = files['name'].tolist()
+    #                 fct = len(fnames)
+    #
+    #                 if fct > 50:
+    #                     print 'There are %d total files\n' % fct
+    #                     print 'Too many files to make master\n'
+    #                     pass
+    #                 elif fct > 35 and fct <= 50 and bns == '1X1':
+    #                     print 'There are %d total files\n' % fct
+    #                     sub_frames = [fnames[x:x + 15] for x in xrange(0, len(fnames), 15)]
+    #                     print 'Creating sub_master_flat: binning is {}, date is {}'.format(bns, tagdate)
+    #                     if not os.path.exists(flatdir):
+    #                         os.makedirs(flatdir)
+    #                     for i in range(3):
+    #                         master_flat(files=sub_frames[i], outdir=flatdir, tag=tagdate + '_' + bns + '_%d' % (i + 1),
+    #                                     band=band)
+    #                 elif fct >= 20 and fct <= 35 and bns == '1X1':
+    #                     print 'There are %d total files\n' % fct
+    #                     sub_frames = [fnames[x * (fct / 2):(x + 1) * (fct / 2)] for x in
+    #                                   range((len(fnames) + (fct / 2) - 1) // (fct / 2))]
+    #                     print 'Creating sub_master_flat: binning is {}, date is {}'.format(bns, tagdate)
+    #                     if not os.path.exists(flatdir):
+    #                         os.makedirs(flatdir)
+    #                     for i in range(2):
+    #                         master_flat(files=sub_frames[i], outdir=flatdir, tag=tagdate + '_' + bns + '_%d' % (i + 1),
+    #                                     band=band)
+    #                 elif fct > 1:
+    #                     if not os.path.exists(flatdir):
+    #                         os.makedirs(flatdir)
+    #                     print '\nCreating master_flat: binning is {}, date is {}'.format(bns, tagdate)
+    #                     master_flat(files=fnames, outdir=flatdir, tag=tagdate + '_' + bns, band=band)
+    #                 else:
+    #                     print 'No Flat Frames found'
+    #     del flat_files
 
 
 # ----------------------------------------------------------------------#

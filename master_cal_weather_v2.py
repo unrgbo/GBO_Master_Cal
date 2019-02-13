@@ -162,10 +162,12 @@ def make_cals(bias=False, dark=False, flat=False,
 
             done_files = pd.concat([done_files, new_files], ignore_index=True)
 
+            del new_files
+
             print '\nWriting out new dataframe with {} files'.format(len(done_files))
             done_files.to_pickle(mstdir + 'all_files.pkl')
 
-        del done_files, new_files
+        del done_files
 
     #  Create a master dataframe for all files
     else:
@@ -255,7 +257,7 @@ def make_cals(bias=False, dark=False, flat=False,
         bins = bias_files['binning'].unique()
         for binning in bins:
             bin = bias_files.where(bias_files['binning'] == binning)
-            bin.dropna(how='all', implace=True)
+            bin.dropna(how='all', inplace=True)
             dates = bin['tagdate'].unique()
             for date in tqdm(dates):
                 biasdir = '{}{}\\Bias\\{}\\'.format(mstdir, binning, date)

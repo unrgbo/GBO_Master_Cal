@@ -6,7 +6,7 @@ Created on Mon Dec 10 07:36:28 2018
 @author: jfausett
 """
 
-import sys, os, glob
+import sys, os, glob, shutil
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ import robust as rb
 import math
 from tqdm import tqdm
 from jdcal import gcal2jd, jd2gcal
-
+import itertools
 
 # This is a test comment for looking at branch
 
@@ -82,10 +82,13 @@ def make_cals(bias=False, dark=False, flat=False,
     temp = []
     binning = []
     JD = []
+    tagdate = []
     exposure = []
     bands = []
     bad_files = []
     no_temp = []
+    no_exp = []
+    no_filter = []
 
     #  Determine weather or not a dataframe has already been created
     if os.path.exists(mstdir + 'all_files.pkl'):
@@ -98,40 +101,52 @@ def make_cals(bias=False, dark=False, flat=False,
         if len(new_list) > 0:
             print 'Creating dataframe for new files'
             for fname in tqdm(new_list):
-                with fits.open(fname) as hdu:
-                    types.append(hdu[0].header['IMAGETYP'])
-                    names.append(fname)
-                    try:
-                        temp.append(str(int(hdu[0].header['SET-TEMP'])))
-                    except:
-                        print 'No temperature keyword for ' + fname + '\nFilling with NaN'
-                        temp.append(np.nan)
-                        no_temp.append(fname)
-                    binning.append(str(hdu[0].header['XBINNING']) + 'X' + str(hdu[0].header['YBINNING']))
-                    JD.append(int(hdu[0].header['JD']))
-                    try:
-                        exposure.append(str(int(hdu[0].header['EXPOSURE'])).zfill(3))
-                    except:
-                        exposure.append(np.nan)
-                    try:
-                        bands.append(hdu[0].header['FILTER'])
-                    except:
-                        bands.append(np.nan)
+                try:
+                    with fits.open(fname) as hdu:
+                        names.append(fname)
+                        types.append(hdu[0].header['IMAGETYP'])
+                        binning.append(str(hdu[0].header['XBINNING']) + 'X' + str(hdu[0].header['YBINNING']))
+                        date = int(hdu[0].header['JD'])
+                        JD.append(date)
+                        year, month, day, sec = jd2gcal(sjd, (date-sjd))
+                        caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
+                        tagdate.append(caldate)
+                        try:
+                            temp.append(str(int(hdu[0].header['SET-TEMP'])))
+                        except:
+                            print 'No temperature keyword for ' + fname + '\nFilling with NaN'
+                            temp.append(np.nan)
+                            bad_files.append(fname)
+                        try:
+                            exposure.append(str(int(hdu[0].header['EXPOSURE'])).zfill(3))
+                        except:
+                            exposure.append(np.nan)
+                            bad_files.append(fname)
+                        try:
+                            bands.append(hdu[0].header['FILTER'])
+                        except:
+                            bands.append(np.nan)
+                            bad_files.append(fname)
+                except:
+                    bad_files.append(fname)
 
             d = {'type': types, 'name': names, 'temp': temp, 'binning':
                 binning, 'JD': JD, 'exp': exposure, 'filter': bands}
-            new_files = pd.DataFrame(data=d)
 
-            del types, names, temp, binning, JD, exposure, bands
+            new_files = pd.DataFrame(data=d)
+            new_files.dropna(how='any', inplace=True)
+
+            for fname in bad_files:
+                shutil.move(fname, fname.replace(root, mstdir + 'bad_files\\'))
+
+            del types, names, temp, binning, JD, exposure, bands, bad_files
 
             done_files = pd.concat([done_files, new_files], ignore_index=True)
 
             print '\nWriting out new dataframe with %d files' % len(done_files)
             done_files.to_pickle(mstdir + 'all_files.pkl')
-            print '\nHere are the files without temperature info in header:\n'
-            print no_temp
 
-        del done_files
+        del done_files, new_files
 
     #  Create a master dataframe for all files
     else:
@@ -139,37 +154,42 @@ def make_cals(bias=False, dark=False, flat=False,
         for fname in tqdm(list_of_files):
             try:
                 with fits.open(fname) as hdu:
-                    types.append(hdu[0].header['IMAGETYP'])
                     names.append(fname)
+                    types.append(hdu[0].header['IMAGETYP'])
+                    binning.append(str(hdu[0].header['XBINNING']) + 'X' + str(hdu[0].header['YBINNING']))
+                    date = int(hdu[0].header['JD'])
+                    JD.append(date)
+                    year, month, day, sec = jd2gcal(sjd, (date - sjd))
+                    caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
+                    tagdate.append(caldate)
                     try:
                         temp.append(str(int(hdu[0].header['SET-TEMP'])))
                     except:
                         print 'No temperature keyword for ' + fname + '\nFilling with NaN'
                         temp.append(np.nan)
-                        no_temp.append(fname)
-                    binning.append(str(hdu[0].header['XBINNING']) + 'X' + str(hdu[0].header['YBINNING']))
-                    JD.append(int(hdu[0].header['JD']))
+                        bad_files.append(fname)
                     try:
                         exposure.append(str(int(hdu[0].header['EXPOSURE'])).zfill(3))
                     except:
                         exposure.append(np.nan)
+                        bad_files.append(fname)
                     try:
                         bands.append(hdu[0].header['FILTER'])
                     except:
                         bands.append(np.nan)
+                        bad_files.append(fname)
             except:
-                print '\nThere is a problem with the file:\n' + fname
                 bad_files.append(fname)
 
-        print '\nHere are the files without temperature info in header:\n'
-        print no_temp
-
-        print '\nHere is a list of the files that raised errors:\n'
-        print bad_files
 
         d = {'type': types, 'name': names, 'temp': temp, 'binning':
             binning, 'JD': JD, 'exp': exposure, 'filter': bands}
+
         all_files = pd.DataFrame(data=d)
+        all_files.dropna(how='any', inplace=True)
+
+        for fname in bad_files:
+            shutil.move(fname, fname.replace(root, mstdir + 'bad_files\\'))
 
         del types, names, temp, binning, JD, exposure, bands, bad_files
 
@@ -190,43 +210,40 @@ def make_cals(bias=False, dark=False, flat=False,
 
         del all_files
 
-        dates = bias_files['JD'].tolist()
-        dates = [int(x) for x in dates]
-        dates = np.unique(dates)
+        # dates = bias_files['JD'].tolist()
+        # dates = [int(x) for x in dates]
+        # dates = np.unique(dates)
+        #
+        # print '\nParsing existing data frames to determine new Bias data\n'
+        # donedates = []
+        # for date in tqdm(dates):
+        #     year, month, day, sec = jd2gcal(sjd, (date - sjd))
+        #     year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
+        #     tagdate = year + month + day
+        #
+        #     for bns in bins:
+        #         biaspath = '{}{}\\Bias\\{}\\master_bias_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns)
+        #         if os.path.exists(biaspath):
+        #             donedates.append(date)
+        #
+        # newdates = [x for x in dates if x not in donedates]
+        # if clobber:
+        #     newdates = dates
+        #
+        # if len(newdates) == 0:
+        #     print '\nDid not find any new dates with Bias Frames\n'
+        # else:
+        #     print '\nBeginning master bias creation for new dates\n'
 
-        print '\nParsing existing data frames to determine new Bias data\n'
-        donedates = []
-        for date in tqdm(dates):
-            year, month, day, sec = jd2gcal(sjd, (date - sjd))
-            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
-            tagdate = year + month + day
+        bins = bias_files['binning'].unique()
+        for binning in bins:
+            bin = bias_files.where(bias_files['binning'] == binning)
+            bin.dropna(how='all', implace=True)
+            dates = bin['tagdate'].unique()
+            for date in dates:
+                biasdir = '{}{}\\Bias\\{}\\'.format(mstdir, binning, date)
 
-            for bns in bins:
-                biaspath = '{}{}\\Bias\\{}\\master_bias_{}_{}.fits'.format(mstdir, bns, tagdate, tagdate, bns)
-                if os.path.exists(biaspath):
-                    donedates.append(date)
-
-        newdates = [x for x in dates if x not in donedates]
-        if clobber:
-            newdates = dates
-
-        if len(newdates) == 0:
-            print '\nDid not find any new dates with Bias Frames\n'
-        else:
-            print '\nBeginning master bias creation for new dates\n'
-        for date in newdates:
-            year, month, day, sec = jd2gcal(sjd, (date - sjd))
-            year, month, day = str(year), str(month).zfill(2), str(day).zfill(2)
-            tagdate = year + month + day
-            for bns in bins:
-                biasdir = mstdir + bns + '\\Bias\\' + tagdate + '\\'
-                # biasdir = mstdir+bns+'/Bias/'+tagdate+'/'
-
-                filter1 = bias_files['binning'] == bns
-                filter2 = bias_files['JD'] == date
-
-                files = bias_files.where(filter1 & filter2)
-
+                files = bin.where(bin['tagdate'] == date)
                 files.dropna(how='all', inplace=True)
 
                 fnames = files['name'].tolist()
@@ -852,73 +869,3 @@ def master_flat(files, bias=None, dark=None, write=True, outdir='/', band='V',
             fits.writeto(outdir + 'master_flat_' + tag + '_' + band + '.fits', master_flat, hout)
 
     return master_flat
-
-
-# =============================================================================
-# Date Convert:
-# =============================================================================
-def jd_to_date(jd):
-    """
-    Convert Julian Day to date.
-
-    Algorithm from 'Practical Astronomy with your Calculator or Spreadsheet',
-        4th ed., Duffet-Smith and Zwart, 2011.
-
-    Parameters
-    ----------
-    jd : float
-        Julian Day
-
-    Returns
-    -------
-    year : int
-        Year as integer. Years preceding 1 A.D. should be 0 or negative.
-        The year before 1 A.D. is 0, 10 B.C. is year -9.
-
-    month : int
-        Month as integer, Jan = 1, Feb. = 2, etc.
-
-    day : float
-        Day, may contain fractional part.
-
-    Examples
-    --------
-    Convert Julian Day 2446113.75 to year, month, and day.
-
-    >>> jd_to_date(2446113.75)
-    (1985, 2, 17.25)
-
-    """
-    jd = jd + 0.5
-
-    F, I = math.modf(jd)
-    I = int(I)
-
-    A = math.trunc((I - 1867216.25) / 36524.25)
-
-    if I > 2299160:
-        B = I + 1 + A - math.trunc(A / 4.)
-    else:
-        B = I
-
-    C = B + 1524
-
-    D = math.trunc((C - 122.1) / 365.25)
-
-    E = math.trunc(365.25 * D)
-
-    G = math.trunc((C - E) / 30.6001)
-
-    day = C - E + F - math.trunc(30.6001 * G)
-
-    if G < 13.5:
-        month = G - 1
-    else:
-        month = G - 13
-
-    if month > 2.5:
-        year = D - 4716
-    else:
-        year = D - 4715
-
-    return year, month, day

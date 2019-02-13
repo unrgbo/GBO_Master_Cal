@@ -25,7 +25,7 @@ import itertools
 # Make Calibration Frames:
 # =============================================================================
 def make_cals(bias=False, dark=False, flat=False,
-              root='Z:\Calibration Files',
+              root='Z:\Calibration Files\\',
               suffix='.fts',
               clobber=False):
     # root ='/Users/jfausett/Dropbox/Calibration Files/',
@@ -186,7 +186,10 @@ def make_cals(bias=False, dark=False, flat=False,
         all_files.dropna(how='any', inplace=True)
 
         for fname in bad_files:
-            shutil.move(fname, fname.replace(root, mstdir + 'bad_files\\'))
+            outdir = '{}bad_files\\'.format(mstdir)
+            if not os.path.exists(os.path.dirname(outdir)):
+                os.mkdir(os.path.dirname(outdir))
+            shutil.move(fname, fname.replace(root, outdir))
 
         del types, names, temp, binning, JD, exposure, bands, bad_files
 

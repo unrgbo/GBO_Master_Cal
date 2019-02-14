@@ -12,15 +12,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from astropy.io import fits
 import robust as rb
-# from length import *
-import math
 from tqdm import tqdm
 from jdcal import gcal2jd, jd2gcal
-import itertools
 
-# This is a test comment for looking at branch
 
-# This is a test comment to check that file is pushed to gitlab
 # =============================================================================
 # Make Calibration Frames:
 # =============================================================================
@@ -87,7 +82,7 @@ def make_cals(bias=False, dark=False, flat=False,
     bands = []
     bad_files = []
 
-    #  Determine weather or not a dataframe has already been created
+    #  Determine whether or not a dataframe already exists
     if os.path.exists(mstdir + 'all_files.pkl'):
         done_files = pd.read_pickle(mstdir + 'all_files.pkl')
 
@@ -303,7 +298,7 @@ def make_cals(bias=False, dark=False, flat=False,
 
                 total_files += fct
 
-        print '\nThere are {} files of type: "Bias Frame\n"'.format(len(bias_files))
+        print '\nThere are {} files of type: "Bias Frame"\n'.format(len(bias_files))
         print 'Processed {} bias files'.format(total_files)
         del bias_files
 
@@ -367,7 +362,7 @@ def make_cals(bias=False, dark=False, flat=False,
 
                     total_files += fct
 
-                    print '\nThere are {} files of type: "Dark Frame\n"'.format(len(dark_files))
+                    print '\nThere are {} files of type: "Dark Frame"\n'.format(len(dark_files))
                     print 'Processed {} dark files'.format(total_files)
         del dark_files
 
@@ -458,7 +453,7 @@ def make_cals(bias=False, dark=False, flat=False,
 
 
 # ----------------------------------------------------------------------#
-# master_bias:
+# master_bias:  Primarily written by Jon Swift, Thacher school
 # ----------------------------------------------------------------------#
 def master_bias(files, write=True, outdir='/', readnoise=False, clobber=False, verbose=True,
                 float32=True, tag='', median=True):
@@ -617,7 +612,7 @@ def master_bias(files, write=True, outdir='/', readnoise=False, clobber=False, v
 
 
 # ----------------------------------------------------------------------#
-# master_dark:
+# master_dark: Primarily written by Jon Swift, Thacher school
 # ----------------------------------------------------------------------#
 def master_dark(files, bias=None, write=True, outdir='/', clobber=False, float32=True, tag='',
                 median=True):
@@ -755,7 +750,7 @@ def master_dark(files, bias=None, write=True, outdir='/', clobber=False, float32
 
 
 # ----------------------------------------------------------------------#
-# master_flat:
+# master_flat: Primarily written by Jon Swift, Thacher school
 # ----------------------------------------------------------------------#
 def master_flat(files, bias=None, dark=None, write=True, outdir='/', band='V',
                 tag='', clobber=False, stretch=3, float32=True, median=True):

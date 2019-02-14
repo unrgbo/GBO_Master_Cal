@@ -298,8 +298,8 @@ def make_cals(bias=False, dark=False, flat=False,
 
                 total_files += fct
 
-        print '\nThere are {} files of type: "Bias Frame"\n'.format(len(bias_files))
-        print 'Processed {} bias files'.format(total_files)
+                print '\nThere are {} files of type: "Bias Frame"\n'.format(len(bias_files))
+                print 'Processed {} bias files'.format(total_files)
         del bias_files
 
     if dark:
@@ -375,6 +375,7 @@ def make_cals(bias=False, dark=False, flat=False,
         flat_files.dropna(how='all', inplace=True)
 
         del all_files
+
         total_files = 0
         bins = flat_files['binning'].unique()
         for binning in bins:

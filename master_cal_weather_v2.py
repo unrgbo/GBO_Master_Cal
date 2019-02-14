@@ -98,46 +98,49 @@ def make_cals(bias=False, dark=False, flat=False,
         if len(new_list) > 0:
             print 'Creating dataframe for new files'
             for fname in tqdm(new_list):
-                names.append(fname)
                 try:
-                    types.append(fits.getval(fname, 'IMAGETYP'))
-                except:
-                    types.append(np.nan)
-                    bad_files.append(fname)
-                try:
-                    binning.append(str(fits.getval(fname, 'XBINNING')) + 'X' + str(fits.getval(fname, 'YBINNING')))
-                except:
-                    binning.append(np.nan)
-                    bad_files.append(fname)
-                try:
-                    date = fits.getval(fname, 'JD')
-                    JD.append(date)
-                    year, month, day, sec = jd2gcal(sjd, (date - sjd))
-                    caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
-                    tagdate.append(caldate)
-                except:
-                    JD.append(np.nan)
-                    tagdate.append(np.nan)
-                    bad_files.append(fname)
-                try:
-                    temp.append(str(int(fits.getval(fname, 'SET-TEMP'))))
-                except:
-                    temp.append(np.nan)
-                    bad_files.append(fname)
-                try:
-                    exposure.append(str(int(fits.getval(fname, 'EXPOSURE'))).zfill(3))
-                except:
-                    exposure.append(np.nan)
-                    bad_files.append(fname)
-                try:
-                    bands.append(fits.getval(fname, 'FILTER'))
-                except:
-                    if (fits.getval(fname, 'IMAGETYP') == 'Bias Frame' or
-                            fits.getval(fname, 'IMAGETYP') == 'Dark Frame'):
-                        bands.append('Not Flat')
-                    else:
-                        bands.append(np.nan)
+                    hdr = fits.getheader(fname)
+                    names.append(fname)
+                    try:
+                        types.append(hdr['IMAGETYP'])
+                    except:
+                        types.append(np.nan)
                         bad_files.append(fname)
+                    try:
+                        binning.append(str(hdr['XBINNING']) + 'X' + str(hdr['yBINNING']))
+                    except:
+                        binning.append(np.nan)
+                        bad_files.append(fname)
+                    try:
+                        date = hdr['JD']
+                        JD.append(date)
+                        year, month, day, sec = jd2gcal(sjd, (date - sjd))
+                        caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
+                        tagdate.append(caldate)
+                    except:
+                        JD.append(np.nan)
+                        tagdate.append(np.nan)
+                        bad_files.append(fname)
+                    try:
+                        temp.append(str(int(hdr['SET-TEMP'])))
+                    except:
+                        temp.append(np.nan)
+                        bad_files.append(fname)
+                    try:
+                        exposure.append(str(int(hdr['EXPOSURE'])).zfill(3))
+                    except:
+                        exposure.append(np.nan)
+                        bad_files.append(fname)
+                    try:
+                        bands.append(hdr['FILTER'])
+                    except:
+                        if hdr['IMAGETYP'] == 'Bias Frame' or hdr['IMAGETYP'] == 'Dark Frame':
+                            bands.append('Not Flat')
+                        else:
+                            bands.append(np.nan)
+                            bad_files.append(fname)
+                except:
+                    bad_files.append(fname)
 
             print len(types), len(names), len(temp), len(binning), len(JD), len(exposure), len(bands), len(tagdate)
 
@@ -174,46 +177,49 @@ def make_cals(bias=False, dark=False, flat=False,
     else:
         print 'Creating master dataframe to parse \n'
         for fname in tqdm(list_of_files):
-            names.append(fname)
             try:
-                types.append(fits.getval(fname, 'IMAGETYP'))
-            except:
-                types.append(np.nan)
-                bad_files.append(fname)
-            try:
-                binning.append(str(fits.getval(fname, 'XBINNING')) + 'X' + str(fits.getval(fname, 'YBINNING')))
-            except:
-                binning.append(np.nan)
-                bad_files.append(fname)
-            try:
-                date = fits.getval(fname, 'JD')
-                JD.append(date)
-                year, month, day, sec = jd2gcal(sjd, (date - sjd))
-                caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
-                tagdate.append(caldate)
-            except:
-                JD.append(np.nan)
-                tagdate.append(np.nan)
-                bad_files.append(fname)
-            try:
-                temp.append(str(int(fits.getval(fname, 'SET-TEMP'))))
-            except:
-                temp.append(np.nan)
-                bad_files.append(fname)
-            try:
-                exposure.append(str(int(fits.getval(fname, 'EXPOSURE'))).zfill(3))
-            except:
-                exposure.append(np.nan)
-                bad_files.append(fname)
-            try:
-                bands.append(fits.getval(fname, 'FILTER'))
-            except:
-                if (fits.getval(fname, 'IMAGETYP') == 'Bias Frame' or
-                        fits.getval(fname, 'IMAGETYP') == 'Dark Frame'):
-                    bands.append('Not Flat')
-                else:
-                    bands.append(np.nan)
+                hdr = fits.getheader(fname)
+                names.append(fname)
+                try:
+                    types.append(hdr['IMAGETYP'])
+                except:
+                    types.append(np.nan)
                     bad_files.append(fname)
+                try:
+                    binning.append(str(hdr['XBINNING']) + 'X' + str(hdr['yBINNING']))
+                except:
+                    binning.append(np.nan)
+                    bad_files.append(fname)
+                try:
+                    date = hdr['JD']
+                    JD.append(date)
+                    year, month, day, sec = jd2gcal(sjd, (date - sjd))
+                    caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
+                    tagdate.append(caldate)
+                except:
+                    JD.append(np.nan)
+                    tagdate.append(np.nan)
+                    bad_files.append(fname)
+                try:
+                    temp.append(str(int(hdr['SET-TEMP'])))
+                except:
+                    temp.append(np.nan)
+                    bad_files.append(fname)
+                try:
+                    exposure.append(str(int(hdr['EXPOSURE'])).zfill(3))
+                except:
+                    exposure.append(np.nan)
+                    bad_files.append(fname)
+                try:
+                    bands.append(hdr['FILTER'])
+                except:
+                    if hdr['IMAGETYP'] == 'Bias Frame' or hdr['IMAGETYP'] == 'Dark Frame':
+                        bands.append('Not Flat')
+                    else:
+                        bands.append(np.nan)
+                        bad_files.append(fname)
+            except:
+                bad_files.append(fname)
 
         print len(types), len(names), len(temp), len(binning), len(JD), len(exposure), len(bands), len(tagdate)
 

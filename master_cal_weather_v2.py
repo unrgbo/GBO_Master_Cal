@@ -270,12 +270,11 @@ def make_cals(bias=False, dark=False, flat=False,
                 fct = len(fnames)
 
                 if fct > 50:
-                    print 'There are %d total files\n' % fct
+                    print '\nThere are {} total files\n'.format(fct)
                     print 'Too many files to make master\n'
-                    pass
                 elif fct > 35 and fct <= 50 and binning == '1X1':
                     sub_frames = [fnames[x:x + 15] for x in xrange(0, len(fnames), 15)]
-                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(binning, date)
+                    print '\nCreating sub_master_bias: binning is {}, date is {}'.format(binning, date)
                     if not os.path.exists(biasdir):
                         os.makedirs(biasdir)
                     for i in range(3):
@@ -283,7 +282,7 @@ def make_cals(bias=False, dark=False, flat=False,
                 elif fct >= 20 and fct <= 35 and binning == '1X1':
                     sub_frames = [fnames[x * (fct / 2):(x + 1) * (fct / 2)] for x in
                                   range((len(fnames) + (fct / 2) - 1) // (fct / 2))]
-                    print 'Creating sub_master_bias: binning is {}, date is {}'.format(binning, date)
+                    print '\nCreating sub_master_bias: binning is {}, date is {}'.format(binning, date)
                     if not os.path.exists(biasdir):
                         os.makedirs(biasdir)
                     for i in range(2):
@@ -291,14 +290,14 @@ def make_cals(bias=False, dark=False, flat=False,
                 elif fct > 1:
                     if not os.path.exists(biasdir):
                         os.makedirs(biasdir)
-                    print 'Creating master_bias: binning is {}, date is {}'.format(binning, date)
+                    print '\nCreating master_bias: binning is {}, date is {}'.format(binning, date)
                     master_bias(files=fnames, outdir=biasdir, tag=date + '_' + binning)
                 else:
                     print 'No Bias Frames found'
 
                 total_files += fct
 
-        print 'There are {} files of type: "Bias Frame"'.format(len(bias_files))
+        print '\nThere are {} files of type: "Bias Frame\n"'.format(len(bias_files))
         print 'Processed {} bias files'.format(total_files)
         del bias_files
 
@@ -332,23 +331,21 @@ def make_cals(bias=False, dark=False, flat=False,
                     fct = len(fnames)
 
                     if fct > 50:
-                        print 'There are %d total files\n' % fct
+                        print '\nThere are {} total files\n'.format(fct)
                         print 'Too many files to make master\n'
-                        pass
                     elif fct > 35 and fct <= 50 and binning == '1X1':
                         print 'There are %d total files\n' % fct
                         sub_frames = [fnames[x:x + 15] for x in xrange(0, len(fnames), 15)]
-                        print 'Creating sub_master_dark: binning is {}, date is {}'.format(binning, date)
+                        print '\nCreating sub_master_dark: binning is {}, date is {}'.format(binning, date)
                         if not os.path.exists(darkdir):
                             os.makedirs(darkdir)
                         for i in range(3):
                             master_dark(files=sub_frames[i], outdir=darkdir,
                                         tag=date + '_' + binning + '_' + exp + '_%d' % (i + 1))
                     elif fct >= 20 and fct <= 35 and binning == '1X1':
-                        print 'There are %d total files\n' % fct
                         sub_frames = [fnames[x * (fct / 2):(x + 1) * (fct / 2)] for x in
                                       range((len(fnames) + (fct / 2) - 1) // (fct / 2))]
-                        print 'Creating sub_master_dark: binning is {}, date is {}'.format(binning, date)
+                        print '\nCreating sub_master_dark: binning is {}, date is {}'.format(binning, date)
                         if not os.path.exists(darkdir):
                             os.makedirs(darkdir)
                         for i in range(2):
@@ -357,10 +354,15 @@ def make_cals(bias=False, dark=False, flat=False,
                     elif fct > 1:
                         if not os.path.exists(darkdir):
                             os.makedirs(darkdir)
-                        print 'Creating master_dark: binning is {}, date is {}'.format(binning, date)
+                        print '\nCreating master_dark: binning is {}, date is {}'.format(binning, date)
                         master_dark(files=fnames, outdir=darkdir, tag=date + '_' + binning + '_' + exp)
                     else:
                         print 'No Dark Frames found'
+
+                    total_files += fct
+
+                    print '\nThere are {} files of type: "Dark Frame\n"'.format(len(dark_files))
+                    print 'Processed {} dark files'.format(total_files)
         del dark_files
 
     # if flat:

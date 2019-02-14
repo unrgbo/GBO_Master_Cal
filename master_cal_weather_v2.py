@@ -110,7 +110,7 @@ def make_cals(bias=False, dark=False, flat=False,
                     binning.append(np.nan)
                     bad_files.append(fname)
                 try:
-                    date = int(fits.getval(fname, 'JD'))
+                    date = fits.getval(fname, 'JD')
                     JD.append(date)
                     year, month, day, sec = jd2gcal(sjd, (date - sjd))
                     caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
@@ -139,7 +139,7 @@ def make_cals(bias=False, dark=False, flat=False,
                         bands.append(np.nan)
                         bad_files.append(fname)
 
-            print len(types), len(names), len(temp), len(binning), len(JD), len(exposure), len(bands)
+            print len(types), len(names), len(temp), len(binning), len(JD), len(exposure), len(bands), len(tagdate)
 
             if (len(names) != len(types) or len(names) != len(temp) or len(names) != len(binning)
                     or len(names) != len(JD) or len(names) != len(exposure) or len(names) != len(bands)):
@@ -186,7 +186,7 @@ def make_cals(bias=False, dark=False, flat=False,
                 binning.append(np.nan)
                 bad_files.append(fname)
             try:
-                date = int(fits.getval(fname, 'JD'))
+                date = fits.getval(fname, 'JD')
                 JD.append(date)
                 year, month, day, sec = jd2gcal(sjd, (date - sjd))
                 caldate = str(year) + str(month).zfill(2) + str(day).zfill(2)
@@ -215,7 +215,7 @@ def make_cals(bias=False, dark=False, flat=False,
                     bands.append(np.nan)
                     bad_files.append(fname)
 
-        print len(types), len(names), len(temp), len(binning), len(JD), len(exposure), len(bands)
+        print len(types), len(names), len(temp), len(binning), len(JD), len(exposure), len(bands), len(tagdate)
 
         if (len(names) != len(types) or len(names) != len(temp) or len(names) != len(binning)
             or len(names) != len(JD) or len(names) != len(exposure) or len(names) != len(bands)):

@@ -10,7 +10,6 @@ done_files = pd.read_pickle(mstdir + 'master_files.pkl')
 bins = np.sort(done_files['binning'].unique())
 bins = np.sort(bins)
 
-bin1 = '1X1'
 
 dark_files = done_files.where(done_files['type'] == 'Dark Frame')
 
@@ -18,9 +17,15 @@ exposures = []
 for bn in bins:
     binfiles = dark_files.where(done_files['binning'] == bn)
     binfiles.dropna(how='all', inplace=True)
-    exposures.append(np.sort(binfiles['exp'].unique()))
+    expose = binfiles['exp'].unique()
+    for x in expose:
+        exposures.append(x)
 
-exposures = exposures.unique()
+exposures = pd.Series(exposures)
+exposures = np.sort(exposures.unique())
+
+
+print exposures
 
 def gui():
 
@@ -76,11 +81,30 @@ def gui():
     bins = values
     print bins
 
-    exposures = []
-    for bn in bins:
-        binfiles = done_files.where(done_files['binning'] == bn)
-        binfiles.dropna(how='all', inplace=True)
-        exposures.append(binfiles['exp'].unique())
+    layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
+              [sg.Text('Master Calibration frames will be copied to:', font=('Helvetica', 14))],
+              [sg.Text(outpath, font=('Helvetica', 14))],
+              [sg.Text('_' * 100, size=(65, 1))],
+              [sg.Text('Enter the dates of science images: Format: 20180715', font=('Helvetica', 14))],
+              [sg.Text(str(dates), font=('Helvetica', 12))],
+              [sg.Text('_' * 100, size=(65, 1))],
+              [sg.Text('Binning', font=('Helvetica', 14), justification='left')],
+              [sg.Text(bins, font=('Helvetica', 12))],
+              [sg.Text('_' * 100, size=(65, 1))],
+              [sg.Checkbox('005', size=(12, 1)), sg.Checkbox('010', size=(12, 1)), sg.Checkbox('015', size=(12, 1)),
+               sg.Checkbox('030', size=(12, 1)), sg.Checkbox('040', size=(12, 1))],
+              [sg.Checkbox('045', size=(12, 1)), sg.Checkbox('050', size=(12, 1)), sg.Checkbox('060', size=(12, 1)),
+               sg.Checkbox('090', size=(12, 1)), sg.Checkbox('120', size=(12, 1))],
+              [sg.Checkbox('160', size=(12, 1)), sg.Checkbox('180', size=(12, 1)), sg.Checkbox('200', size=(12, 1)),
+               sg.Checkbox('220', size=(12, 1)), sg.Checkbox('240', size=(12, 1))],
+              [sg.Checkbox('280', size=(12, 1)), sg.Checkbox('300', size=(12, 1)), sg.Checkbox('360', size=(12, 1)),
+               sg.Checkbox('600', size=(12, 1))],
+              [sg.Submit(), sg.Cancel()]]
+
+    window = sg.Window('GBO finder gui', font=("Helvetica", 12)).Layout(layout)
+
+    event, values = window.Read()
+
 
     layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
               [sg.Text('Master Calibration frames will be copied to:', font=('Helvetica', 14))],
@@ -91,11 +115,21 @@ def gui():
               [sg.Text('_' * 100, size=(65, 1))],
               [sg.Text('Binning', font=('Helvetica', 14), justification='left')],
               [sg.Text(bins, font=('Helvetica', 12))],
+              [sg.Text('_' * 100, size=(65, 1))],
+              [sg.Checkbox('005', size=(12, 1)), sg.Checkbox('010', size=(12, 1)), sg.Checkbox('015', size=(12, 1)),\
+              sg.Checkbox('030', size=(12, 1)), sg.Checkbox('040', size=(12, 1))],
+              [sg.Checkbox('045', size=(12, 1)), sg.Checkbox('050', size=(12, 1)), sg.Checkbox('060', size=(12, 1)),\
+              sg.Checkbox('090', size=(12, 1)), sg.Checkbox('120', size=(12, 1))],
+              [sg.Checkbox('160', size=(12, 1)), sg.Checkbox('180', size=(12, 1)), sg.Checkbox('200', size=(12, 1)),\
+               sg.Checkbox('220', size=(12, 1)), sg.Checkbox('240', size=(12, 1))],
+              [sg.Checkbox('280', size=(12, 1)), sg.Checkbox('300', size=(12, 1)), sg.Checkbox('360', size=(12, 1)),\
+               sg.Checkbox('600', size=(12, 1))],
               [sg.Submit(), sg.Cancel()]]
 
     window = sg.Window('GBO finder gui', font=("Helvetica", 12)).Layout(layout)
 
     event, values = window.Read()
+
 
     # layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
     #           [sg.Text('Enter output path for your files', font=('Helvetica', 12))],

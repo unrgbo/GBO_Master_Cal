@@ -8,7 +8,8 @@ mstdir = 'Z:\Calibration Master Frames\\'
 outdir = 'C:\Users\user\Dropbox\Master_Finder_Output\\'
 
 #  Import data frame to parse
-done_files = pd.read_pickle(mstdir + 'master_files.pkl')
+done_files = pd.read_pickle(mstdir + 'all_files.pkl')
+#done_files = pd.read_pickle(mstdir + 'master_files.pkl')
 
 bins = done_files['binning'].unique()
 temps = done_files['temp'].unique()

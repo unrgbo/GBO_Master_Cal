@@ -732,7 +732,7 @@ def master_dark(files, bias=None, write=True, outdir='/', clobber=False, float32
 # ----------------------------------------------------------------------#
 # master_flat: Primarily written by Jon Swift, Thacher school
 # ----------------------------------------------------------------------#
-def master_flat(files, bias=None, dark=None, write=True, outdir='/', band='V',
+def master_flat(files, bias=None, dark=None, write=True, outdir='/',
                 tag='', clobber=False, stretch=3, float32=True, median=True):
     """
     Overview:
@@ -765,7 +765,7 @@ def master_flat(files, bias=None, dark=None, write=True, outdir='/', band='V',
     """
 
     # Don't redo master_flat unless clobber keyword set
-    name = outdir + 'master_flat_' + tag + '_' + band + '.fits'
+    name = outdir + 'master_flat_' + tag + '.fits'
     if len(glob.glob(name)) == 1 and not clobber:
         print("Master flat already exists!")
         master_flat = fits.getdata(name, 0, header=False)
@@ -826,7 +826,7 @@ def master_flat(files, bias=None, dark=None, write=True, outdir='/', band='V',
 
     # Write out plot and master flat array
     if write:
-        plt.savefig(outdir + 'master_flat' + tag + '_' + band + '.png', dpi=300)
+        plt.savefig(outdir + 'master_flat' + tag + '.png', dpi=300)
         hout = fits.Header()
         hout["FILTER"] = (filter, "Filter used when taking image")
         hout["MEDCTS"] = (med, "Median counts in individual flat frames")
@@ -841,8 +841,8 @@ def master_flat(files, bias=None, dark=None, write=True, outdir='/', band='V',
         if len(glob.glob(outdir + 'master_flat' + tag + '.fits')) == 1:
             os.system('rm ' + outdir + 'master_flat' + tag + '.fits')
         if float32:
-            fits.writeto(outdir + 'master_flat_' + tag + '_' + band + '.fits', np.float32(master_flat), hout)
+            fits.writeto(outdir + 'master_flat_' + tag + '.fits', np.float32(master_flat), hout)
         else:
-            fits.writeto(outdir + 'master_flat_' + tag + '_' + band + '.fits', master_flat, hout)
+            fits.writeto(outdir + 'master_flat_' + tag + '.fits', master_flat, hout)
 
     return master_flat

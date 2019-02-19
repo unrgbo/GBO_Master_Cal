@@ -2,54 +2,34 @@ import PySimpleGUI27 as sg
 import pandas as pd
 import numpy as np
 
-mstdir = '/Users/jakrin/Dropbox/JFausett/'
+#  Paths to use
+mstdir = '/Users/jfausett/Dropbox/JFausett/'
 #mstdir = 'Z:\Calibration Master Frames\\'
-outdir = '/Users/jfausett/Dropbox/JFausett/test_out/'
+outdir = 'C:\Users\user\Dropbox\Master_Finder_Output'
+
+#  Import data frame to parse
 done_files = pd.read_pickle(mstdir + 'master_files.pkl')
 
-bins = np.sort(done_files['binning'].unique())
-bins = np.sort(bins)
-
+bins = done_files['binning'].unique()
+temps = done_files['temp'].unique()
 
 dark_files = done_files.where(done_files['type'] == 'Dark Frame')
 
-exposures = []
-for bn in bins:
-    binfiles = dark_files.where(done_files['binning'] == bn)
-    binfiles.dropna(how='all', inplace=True)
-    expose = binfiles['exp'].unique()
-    for x in expose:
-        exposures.append(x)
-temps = done_files['temp'].unique()
+flat_files = done_files.where(done_files['type'] == 'Flat Field')
 
-exposures = pd.Series(exposures)
-exposures = np.sort(exposures.unique())
-
-
-print exposures
-
-dates = []
 
 def gui():
 
-
-    #sg.SetOptions(text_justification='right')
-
-
+    #  Gui to get Path, Binning, and Temp from user
     layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
-              [sg.Text('Enter output path for your files', font=('Helvetica', 12))],
-              [sg.InputText('C:\Users\user\Dropbox\Master_Finder_Output', size=(40, 1), key='path'),
-               sg.Text('Leave as is for default')],
               [sg.Text('_' * 100, size=(65, 1))],
-              [sg.Text('Which master calibration frames are you looking for?', font=('Helvetica', 14))],
+              [sg.Text('Enter output path for your files', font=('Helvetica', 12))],
+              [sg.InputText(outdir, size=(40, 1), key='path'), sg.Text('Leave as is for default')],
+              [sg.Text('_' * 100, size=(65, 1))],
+              [sg.Text('Select the type of master frames to find', font=('Helvetica', 14))],
               [sg.Checkbox('Bias', default=True, size=(12, 1), key='Bias'),
                sg.Checkbox('Dark', default=True, size=(12, 1), key='Dark'),
                sg.Checkbox('Flat', default=True, size=(12, 1), key='Flat')],
-              [sg.Text('_' * 100, size=(65, 1))],
-              [sg.Text('Enter the dates of science images: Format: 20180715', font=('Helvetica', 14)),
-               sg.T('Dates')],
-              [sg.InputText(None, size=(12, 1), key='datein'), sg.T('', key='dateout')],
-              [sg.Button('Add')],
               [sg.Text('_' * 100, size=(65, 1))],
               [sg.Text('Select the Binning', font=('Helvetica', 14))],
               [sg.Radio('1X1', "RADIO1", default=True, key='1X1'), sg.Radio('2X2', "RADIO1", key='2X2'),
@@ -60,96 +40,102 @@ def gui():
                sg.Radio('-35', "RADIO2", key='-35')],
               [sg.Submit(), sg.Button('Exit')]]
 
-    window = sg.Window('GBO finder gui', font=("Helvetica", 12)).Layout(layout)
+    window = sg.Window('GBO Master Calibration Finder', font=("Helvetica", 12)).Layout(layout)
+
+    event, values = window.Read()
+
+    window.Close()
+
+    types = ['Bias', 'Dark', 'Flat']
+    types = [x for x in types if values[x] == True]
+    binning = [x for x in bins if values[x] == True]
+    binning = binning[0]
+    temp = [x for x in temps if values[x] == True]
+    temp = temp[0]
+
+    outpath = values['path']
+
+    #  Gui to get dates from the user
+    dates = []
+    layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
+              [sg.Text('_' * 100, size=(65, 1))],
+              [sg.Text('Enter the dates of science images', font=('Helvetica', 14))],
+              [sg.T('Format: 20180715'), sg.T('Added Date', size=(19,1), justification='right')],
+              [sg.InputText('', size=(12, 1), key='datein'),
+              sg.T('', size=(20, 1), justification='right', key='dateout')],
+              [sg.Submit('Add Date')],
+              [sg.Button('Done'), sg.Button('Exit')]]
+
+    window = sg.Window('Window Title').Layout(layout)
 
     while True:  # Event Loop
         event, values = window.Read()
         print event, values
         if event is None or event == 'Exit':
             break
-        if event == 'Add':
+        if event == 'Done':
+            break
+        if event == 'Add Date':
             dates.append(values['datein'])
             window.Element('dateout').Update(values['datein'])
 
+    window.Close()
 
-    print values
+    #  Gui to get dark exposure times from the user
+    if 'Dark' in types:
+        darkbin = dark_files.where(done_files['binning'] == binning)
+        darkbin.dropna(how='all', inplace=True)
+        darktemp = darkbin.where(darkbin['temp'] == temp)
+        darktemp.dropna(how='all', inplace=True)
 
-    binning = [x for x in bins if values[x] == True]
-    temp = [x for x in temps if values[x] == True]
+        exposures = np.sort(darktemp['exp'].unique())
 
-    print binning, temp
+        layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
+                  [sg.Text('Your Binning is:'), sg.Text(binning)],
+                  [sg.Text('Your Temp is:', size=(12,1)), sg.Text(temp)],
+                  [sg.Text('',size=(15,1)), sg.Text('Available Exposures')],
+                  [sg.Text('', size=(16,1)),
+                   sg.Listbox(exposures, size=(10,12), select_mode='multiple', key='exposures')],
+                  [sg.Submit(), sg.Button('Exit')]]
 
-    # outpath = values[0]
-    # types = values[1:4]
-    # dates = values[4:12]
-    # binning = values[12:16]
-    # temp = values[16:]
-    #
-    # bins = [x for x in b]
-    #
-    # print event, outpath, types, dates, binning, temp
+        window = sg.Window('GBO Master Calibration Finder', font=("Helvetica", 12)).Layout(layout)
 
-    # layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
-    #           [sg.Text('Master Calibration frames will be copied to:', font=('Helvetica', 14))],
-    #           [sg.Text(outpath, font=('Helvetica', 14))],
-    #           [sg.Text('_' * 100, size=(65, 1))],
-    #           [sg.Text('Enter the dates of science images: Format: 20180715', font=('Helvetica', 14))],
-    #           [sg.InputText(None, size=(12, 1)), sg.InputText(None, size=(12, 1)),
-    #            sg.InputText(None, size=(12, 1)), sg.InputText(None, size=(12, 1))],
-    #           [sg.InputText(None, size=(12, 1)), sg.InputText(None, size=(12, 1)),
-    #            sg.InputText(None, size=(12, 1)), sg.InputText(None, size=(12, 1))],
-    #           [sg.Text('_' * 100, size=(65, 1))],
-    #           [sg.Submit(), sg.Cancel()]]
-    #
-    # window = sg.Window('GBO finder gui', font=("Helvetica", 12)).Layout(layout)
-    #
-    # event, values = window.Read()
-    # dates = values
-    #
-    # print dates
-    #
-    # layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
-    #           [sg.Text('Master Calibration frames will be copied to:', font=('Helvetica', 14))],
-    #           [sg.Text(outpath, font=('Helvetica', 14))],
-    #           [sg.Text('_' * 100, size=(65, 1))],
-    #           [sg.Text('Enter the dates of science images: Format: 20180715', font=('Helvetica', 14))],
-    #           [sg.Text(str(dates), font=('Helvetica', 12))],
-    #           [sg.Text('_' * 100, size=(65, 1))],
-    #           [sg.Text('Binning', font=('Helvetica', 15), justification='left')],
-    #           [sg.Checkbox('_1X1_', size=(12, 1)), sg.Checkbox('2X2', size=(12, 1)),
-    #            sg.Checkbox('3X3', size=(12, 1)), sg.Checkbox('4X4', size=(12, 1))],
-    #           [sg.Submit(), sg.Cancel()]]
-    #
-    # window = sg.Window('GBO finder gui', font=("Helvetica", 12)).Layout(layout)
-    #
-    # event, values = window.Read()
-    #
-    # bins = values
-    # print bins
-    #
-    # layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
-    #           [sg.Text('Master Calibration frames will be copied to:', font=('Helvetica', 14))],
-    #           [sg.Text(outpath, font=('Helvetica', 14))],
-    #           [sg.Text('_' * 100, size=(65, 1))],
-    #           [sg.Text('Enter the dates of science images: Format: 20180715', font=('Helvetica', 14))],
-    #           [sg.Text(str(dates), font=('Helvetica', 12))],
-    #           [sg.Text('_' * 100, size=(65, 1))],
-    #           [sg.Text('Binning', font=('Helvetica', 14), justification='left')],
-    #           [sg.Text(bins, font=('Helvetica', 12))],
-    #           [sg.Text('_' * 100, size=(65, 1))],
-    #           [sg.Checkbox('005', size=(12, 1)), sg.Checkbox('010', size=(12, 1)), sg.Checkbox('015', size=(12, 1)),
-    #            sg.Checkbox('030', size=(12, 1)), sg.Checkbox('040', size=(12, 1))],
-    #           [sg.Checkbox('045', size=(12, 1)), sg.Checkbox('050', size=(12, 1)), sg.Checkbox('060', size=(12, 1)),
-    #            sg.Checkbox('090', size=(12, 1)), sg.Checkbox('120', size=(12, 1))],
-    #           [sg.Checkbox('160', size=(12, 1)), sg.Checkbox('180', size=(12, 1)), sg.Checkbox('200', size=(12, 1)),
-    #            sg.Checkbox('220', size=(12, 1)), sg.Checkbox('240', size=(12, 1))],
-    #           [sg.Checkbox('280', size=(12, 1)), sg.Checkbox('300', size=(12, 1)), sg.Checkbox('360', size=(12, 1)),
-    #            sg.Checkbox('600', size=(12, 1))],
-    #           [sg.Submit(), sg.Cancel()]]
-    #
-    # window = sg.Window('GBO finder gui', font=("Helvetica", 12)).Layout(layout)
-    #
-    # event, values = window.Read()
-    #
-    #
-    return dates
+        event, values = window.Read()
+
+        window.Close()
+
+        exposures = values['exposures']
+    else:
+        exposures = []
+
+    #  Gui to get filters from the user
+    if 'Flat' in types:
+        flatbin = flat_files.where(done_files['binning'] == binning)
+        flatbin.dropna(how='all', inplace=True)
+        flattemp = flatbin.where(flatbin['temp'] == temp)
+        flattemp.dropna(how='all', inplace=True)
+
+        filters = np.sort(flattemp['filter'].unique())
+
+        layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
+                  [sg.Text('Your Binning is:'), sg.Text(binning)],
+                  [sg.Text('Your Temp is:', size=(12,1)), sg.Text(temp)],
+                  [sg.Text('',size=(15,1)), sg.Text('Available Filters')],
+                  [sg.Text('', size=(16,1)),
+                   sg.Listbox(filters, size=(10,12), select_mode='multiple', key='filters')],
+                  [sg.Submit(), sg.Button('Exit')]]
+
+        window = sg.Window('GBO Master Calibration Finder', font=("Helvetica", 12)).Layout(layout)
+
+        event, values = window.Read()
+
+        window.Close()
+
+        filters = values['filters']
+    else:
+        filters = []
+
+    return outpath, binning, temp, dates, exposures, filters
+
+
+

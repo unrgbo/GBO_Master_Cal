@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 
 #  Paths to use
-mstdir = '/Users/jfausett/Dropbox/JFausett/'
-#mstdir = 'Z:\Calibration Master Frames\\'
+#mstdir = '/Users/jfausett/Dropbox/JFausett/'
+mstdir = 'Z:\Calibration Master Frames\\'
 outdir = 'C:\Users\user\Dropbox\Master_Finder_Output\\'
 
 #  Import data frame to parse

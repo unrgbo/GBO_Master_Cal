@@ -5,7 +5,7 @@ import numpy as np
 #  Paths to use
 mstdir = '/Users/jfausett/Dropbox/JFausett/'
 #mstdir = 'Z:\Calibration Master Frames\\'
-outdir = 'C:\Users\user\Dropbox\Master_Finder_Output'
+outdir = 'C:\Users\user\Dropbox\Master_Finder_Output\\'
 
 #  Import data frame to parse
 done_files = pd.read_pickle(mstdir + 'master_files.pkl')
@@ -54,6 +54,8 @@ def gui():
     temp = temp[0]
 
     outpath = values['path']
+    if not outpath.endswith('\\'):
+        outpath = outpath + '\\'
 
     #  Gui to get dates from the user
     dates = []
@@ -135,7 +137,7 @@ def gui():
     else:
         filters = []
 
-    return outpath, binning, temp, dates, exposures, filters
+    return types, outpath, binning, temp, dates, exposures, filters
 
 
 

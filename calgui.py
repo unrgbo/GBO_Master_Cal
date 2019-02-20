@@ -1,15 +1,16 @@
 import PySimpleGUI27 as sg
 import pandas as pd
 import numpy as np
+import sys
 
 #  Paths to use
-#mstdir = '/Users/jfausett/Dropbox/JFausett/'
-mstdir = 'Z:\Calibration Master Frames\\'
-outdir = 'C:\Users\user\Dropbox\Master_Finder_Output\\'
+mstdir = '/Users/jfausett/Dropbox/JFausett/'
+#mstdir = 'Z:\Calibration Master Frames\\'
+outdir = 'C:\Users\user\Dropbox\Master Calibration Frame Drop\\'
 
 #  Import data frame to parse
-done_files = pd.read_pickle(mstdir + 'all_files.pkl')
-#done_files = pd.read_pickle(mstdir + 'master_files.pkl')
+#done_files = pd.read_pickle(mstdir + 'all_files.pkl')
+done_files = pd.read_pickle(mstdir + 'master_files.pkl')
 
 bins = done_files['binning'].unique()
 temps = done_files['temp'].unique()
@@ -20,43 +21,6 @@ flat_files = done_files.where(done_files['type'] == 'Flat Field')
 
 
 def gui():
-
-    #  Gui to get Path, Binning, and Temp from user
-    layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
-              [sg.Text('_' * 100, size=(65, 1))],
-              [sg.Text('Enter output path for your files', font=('Helvetica', 12))],
-              [sg.InputText(outdir, size=(40, 1), key='path'), sg.Text('Leave as is for default')],
-              [sg.Text('_' * 100, size=(65, 1))],
-              [sg.Text('Select the type of master frames to find', font=('Helvetica', 14))],
-              [sg.Checkbox('Bias', default=True, size=(12, 1), key='Bias'),
-               sg.Checkbox('Dark', default=True, size=(12, 1), key='Dark'),
-               sg.Checkbox('Flat', default=True, size=(12, 1), key='Flat')],
-              [sg.Text('_' * 100, size=(65, 1))],
-              [sg.Text('Select the Binning', font=('Helvetica', 14))],
-              [sg.Radio('1X1', "RADIO1", default=True, key='1X1'), sg.Radio('2X2', "RADIO1", key='2X2'),
-               sg.Radio('3X3', "RADIO1", key='3X3'), sg.Radio('4X4', "RADIO1", key='4X4')],
-              [sg.Text('_' * 100, size=(65, 1))],
-              [sg.Text('Select the Temp', font=('Helvetica', 14))],
-              [sg.Radio('-25', "RADIO2", default=True, key='-25'), sg.Radio('-30', "RADIO2", key='-30'),
-               sg.Radio('-35', "RADIO2", key='-35')],
-              [sg.Submit(), sg.Button('Exit')]]
-
-    window = sg.Window('GBO Master Calibration Finder', font=("Helvetica", 12)).Layout(layout)
-
-    event, values = window.Read()
-
-    window.Close()
-
-    types = ['Bias', 'Dark', 'Flat']
-    types = [x for x in types if values[x] == True]
-    binning = [x for x in bins if values[x] == True]
-    binning = binning[0]
-    temp = [x for x in temps if values[x] == True]
-    temp = temp[0]
-
-    outpath = values['path']
-    if not outpath.endswith('\\'):
-        outpath = outpath + '\\'
 
     #  Gui to get dates from the user
     dates = []
@@ -75,6 +39,8 @@ def gui():
         event, values = window.Read()
         print event, values
         if event is None or event == 'Exit':
+            print '\nClosing program based on "Exit" command'
+            sys.exit(1)
             break
         if event == 'Done':
             break
@@ -83,6 +49,48 @@ def gui():
             window.Element('dateout').Update(values['datein'])
 
     window.Close()
+
+
+    #  Gui to get Path, Binning, and Temp from user
+    layout = [[sg.Text('GBO Master Calibration Finder', font=('Helvetica', 25), justification='center')],
+              [sg.Text('_' * 100, size=(65, 1))],
+              [sg.Text('Enter output path for your files', font=('Helvetica', 12))],
+              [sg.InputText(outdir, size=(45, 1), key='path'), sg.Text('Leave as is for default')],
+              [sg.Text('_' * 100, size=(65, 1))],
+              [sg.Text('Select the type of master frames to find', font=('Helvetica', 14))],
+              [sg.Checkbox('Bias', default=True, size=(12, 1), key='Bias'),
+               sg.Checkbox('Dark', default=True, size=(12, 1), key='Dark'),
+               sg.Checkbox('Flat', default=True, size=(12, 1), key='Flat')],
+              [sg.Text('_' * 100, size=(65, 1))],
+              [sg.Text('Select the Binning', font=('Helvetica', 14))],
+              [sg.Radio('1X1', "RADIO1", default=True, key='1X1'), sg.Radio('2X2', "RADIO1", key='2X2'),
+               sg.Radio('3X3', "RADIO1", key='3X3'), sg.Radio('4X4', "RADIO1", key='4X4')],
+              [sg.Text('_' * 100, size=(65, 1))],
+              [sg.Text('Select the Temp', font=('Helvetica', 14))],
+              [sg.Radio('-25', "RADIO2", default=True, key='-25'), sg.Radio('-30', "RADIO2", key='-30'),
+               sg.Radio('-35', "RADIO2", key='-35')],
+              [sg.Submit(), sg.Button('Exit')]]
+
+    window = sg.Window('GBO Master Calibration Finder', font=("Helvetica", 12)).Layout(layout)
+
+    event, values = window.Read()
+    if event == 'Exit':
+        print '\nClosing program based on "Exit" command'
+        sys.exit(2)
+
+    window.Close()
+
+    types = ['Bias', 'Dark', 'Flat']
+    types = [x for x in types if values[x] == True]
+    binning = [x for x in bins if values[x] == True]
+    binning = binning[0]
+    temp = [x for x in temps if values[x] == True]
+    temp = temp[0]
+
+    outpath = values['path']
+    if not outpath.endswith('\\'):
+        outpath = outpath + '\\'
+
 
     #  Gui to get dark exposure times from the user
     if 'Dark' in types:
@@ -106,6 +114,10 @@ def gui():
         event, values = window.Read()
 
         window.Close()
+
+        if event == 'Exit':
+            print '\nClosing program based on "Exit" command'
+            sys.exit(3)
 
         exposures = values['exposures']
     else:
@@ -133,6 +145,10 @@ def gui():
         event, values = window.Read()
 
         window.Close()
+
+        if event == 'Exit':
+            print '\nClosing program based on "Exit" command'
+            sys.exit(4)
 
         filters = values['filters']
     else:

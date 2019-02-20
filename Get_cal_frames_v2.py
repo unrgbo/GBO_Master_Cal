@@ -1,10 +1,14 @@
-import shutil, os
+import shutil, os, sys
 import pandas as pd
 import numpy as np
 from jdcal import jd2gcal, gcal2jd
 import calgui as cg
 
-types, outpath, binning, temp, dates, exposures, filters = cg.gui()
+try:
+    types, outpath, binning, temp, dates, exposures, filters = cg.gui()
+finally:
+    print '\nExiting based on GUI call'
+    sys.exit(5)
 
 userJD = []
 for date in dates:

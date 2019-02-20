@@ -31,8 +31,6 @@ if 'Bias' in types:
     bias_files = tempfiles.where(tempfiles['type'] == 'Bias Frame')
     bias_files.dropna(how='all', inplace=True)
     biasJD = bias_files['JD']
-    # biasJD = pd.Series([int(x) for x in biasJD])
-    # biasJD = biasJD.unique()
     for date in userJD:
         year, month, day, sec = jd2gcal(sjd, (date - sjd))
         usertag = '{}{}{}'.format(str(year), str(month).zfill(2), str(day).zfill(2))
@@ -44,4 +42,31 @@ if 'Bias' in types:
                                 outpath + usertag + '\\')
         if not os.path.exists(outpath + usertag + '\\'):
             os.mkdir(outpath + usertag + '\\')
-        shutil.copy(fname, outname)
+        try:
+            shutil.copy(fname, outname)
+        except:
+            shutil.copy(fname.replace('.fits', '_1.fits'), outname)
+
+
+if 'Dark' in types:
+    dark_files = tempfiles.where(tempfiles['type'] == 'Dark Frame')
+    dark_files.dropna(how='all', inplace=True)
+    for exp in exposures:
+        darkexp = dark_files.where(dark_files['exp'] == exp)
+        darkexp.dropna(how='all', inplace=True)
+        darkJD = darkexp['JD']
+        for date in userJD:
+            year, month, day, sec = jd2gcal(sjd, (date - sjd))
+            usertag = '{}{}{}'.format(str(year), str(month).zfill(2), str(day).zfill(2))
+            darkdate = min(darkJD, key=lambda x: abs(x - date))
+            year, month, day, sec = jd2gcal(sjd, (darkdate - sjd))
+            tagdate = '{}{}{}'.format(str(year), str(month).zfill(2), str(day).zfill(2))
+            fname = '{}{}\\Dark\\{}\\master_dark_{}_{}_{}.fits'.format(mstdir, binning, tagdate, tagdate, binning, exp)
+            outname = fname.replace(mstdir + binning + '\\Dark\\' + tagdate,\
+                                    outpath + usertag + '\\')
+            if not os.path.exists(outpath + usertag + '\\'):
+                os.mkdir(outpath + usertag + '\\')
+            try:
+                shutil.copy(fname, outname)
+            except:
+                shutil.copy(fname.replace('.fits', '_1.fits'), outname)

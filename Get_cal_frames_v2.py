@@ -31,8 +31,8 @@ if 'Bias' in types:
     bias_files = tempfiles.where(tempfiles['type'] == 'Bias Frame')
     bias_files.dropna(how='all', inplace=True)
     biasJD = bias_files['JD']
-    biasJD = pd.Series([int(x) for x in biasJD])
-    biasJD = biasJD.unique()
+    # biasJD = pd.Series([int(x) for x in biasJD])
+    # biasJD = biasJD.unique()
     for date in userJD:
         year, month, day, sec = jd2gcal(sjd, (date - sjd))
         usertag = '{}{}{}'.format(str(year), str(month).zfill(2), str(day).zfill(2))

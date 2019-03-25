@@ -31,7 +31,7 @@ def gui():
               [sg.InputText('', size=(12, 1), key='datein'),
               sg.T('', size=(20, 1), justification='right', key='dateout')],
               [sg.Submit('Add Date')],
-              [sg.Button('Done'), sg.Button('Exit')]]
+              [sg.Button('Next'), sg.Button('Exit')]]
 
     window = sg.Window('Window Title').Layout(layout)
 
@@ -42,7 +42,7 @@ def gui():
             print '\nClosing program based on "Exit" command'
             sys.exit(1)
             break
-        if event == 'Done':
+        if event == 'Next':
             break
         if event == 'Add Date':
             dates.append(values['datein'])

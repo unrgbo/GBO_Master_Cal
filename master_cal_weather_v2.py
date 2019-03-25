@@ -639,6 +639,7 @@ def master_dark(files, bias=None, write=True, outdir='/', clobber=False, float32
     stack = np.zeros((fct, ysz, xsz))
     temps = []
     exps = []
+    hout = header
 
     # Load stack array and get CCD temperatures
     for i in np.arange(fct):
@@ -691,10 +692,10 @@ def master_dark(files, bias=None, write=True, outdir='/', clobber=False, float32
     plt.clf()
     plt.imshow(master_dark, vmin=vmin, vmax=vmax, cmap='gist_heat', interpolation='nearest', origin='lower')
     plt.colorbar()
-    plt.annotate('Dark Current = %.2f cts/sec' % med, [0.72, 0.8], horizontalalignment='right',
+    plt.annotate('Dark Current = %.2f cts' % med, [0.72, 0.8], horizontalalignment='right',
                  xycoords='figure fraction', fontsize='large')
     #                 path_effects=[PathEffects.withStroke(linewidth=3,foreground="w")])
-    plt.annotate(r'$\sigma$ = %.2f cts/sec' % sig, [0.72, 0.75], horizontalalignment='right',
+    plt.annotate(r'$\sigma$ = %.2f cts' % sig, [0.72, 0.75], horizontalalignment='right',
                  xycoords='figure fraction', fontsize='large')
     #                 path_effects=[PathEffects.withStroke(linewidth=3,foreground="w")])
     plt.annotate(r'$\langle T_{\rm CCD} \rangle$ = %.2f C' % np.median(temps),
@@ -711,7 +712,8 @@ def master_dark(files, bias=None, write=True, outdir='/', clobber=False, float32
 
         plt.savefig(name + '.png', dpi=300)
 
-        hout = fits.Header()
+#        hout = fits.Header()
+        hout['HISTORY'] = 'This is a median master'
         hout["TEMPMAX"] = (tmax, "Maximum CCD temperature")
         hout["TEMPMIN"] = (tmin, "Minimum CCD temperature")
         hout["TEMPMED"] = (tmed, "Median CCD temperature")
@@ -719,8 +721,8 @@ def master_dark(files, bias=None, write=True, outdir='/', clobber=False, float32
         hout["TEMPSIG"] = (tsig, "CCD temperature RMS")
         hout["EXPMAX"] = (expmax, "Maximum exposure time")
         hout["EXPMIN"] = (expmin, "Minimum exposure time")
-        hout["DARKCNT"] = (med, "Median dark current (cts/sec)")
-        hout["DARKSIG"] = (sig, "Dark current RMS (cts/sec)")
+        hout["DARKCNT"] = (med, "Median dark current (cts)")
+        hout["DARKSIG"] = (sig, "Dark current RMS (cts)")
         if len(glob.glob(name)) == 1:
             os.system('rm ' + name + '.fits')
         if float32:
@@ -780,6 +782,7 @@ def master_flat(files, bias=None, dark=None, write=True, outdir='/',
 
     ysz, xsz = image.shape
     stack = np.zeros((fct, ysz, xsz))
+    hout = header
 
     # Load stack array and get CCD temperatures
     meds = []
@@ -800,7 +803,8 @@ def master_flat(files, bias=None, dark=None, write=True, outdir='/',
         #             image -= dark*exptime
         # =============================================================================
         meds.append(np.median(image))
-        stack[i, :, :] = image / np.median(image)
+#        stack[i, :, :] = image / np.median(image)
+        stack[i, :, :] = image
 
     # Obtain statistics for the master dark image header
     med = np.median(meds)
@@ -829,7 +833,8 @@ def master_flat(files, bias=None, dark=None, write=True, outdir='/',
     # Write out plot and master flat array
     if write:
         plt.savefig(outdir + 'master_flat' + tag + '.png', dpi=300)
-        hout = fits.Header()
+#        hout = fits.Header()
+        hout['HISTORY'] = 'This is a median master'
         hout["FILTER"] = (filter, "Filter used when taking image")
         hout["MEDCTS"] = (med, "Median counts in individual flat frames")
         hout["MEDSIG"] = (sig, "Median count RMS in individual flat frames")

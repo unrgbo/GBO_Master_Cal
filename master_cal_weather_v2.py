@@ -482,6 +482,7 @@ def master_bias(files, write=True, outdir='/', readnoise=False, clobber=False, v
     ysz, xsz = image.shape
     stack = np.zeros((fct, ysz, xsz))
     temps = []
+    hout = header
 
     # Load stack array and get CCD temperatures
     for i in np.arange(fct):
@@ -567,10 +568,11 @@ def master_bias(files, write=True, outdir='/', readnoise=False, clobber=False, v
         name = outdir + 'master_bias_' + tag
         plt.savefig(name + '.png', dpi=300)
 
-        hout = fits.Header()
-        hout['CCDTEMP'] = (np.median(temps), "Median CCD temperature")
+#        hout = fits.Header()
+        hout['HISTORY'] = 'This is a median master'
+        hout['MEDCCDTEMP'] = (np.median(temps), "Median CCD temperature")
         hout["TEMPSIG"] = (np.std(temps), "CCD temperature RMS")
-        hout["BIAS"] = (med, "Median bias level (cts)")
+        hout["MEDBIAS"] = (med, "Median bias level (cts)")
         hout["BIASSIG"] = (sig, "Bias RMS (cts)")
         if len(glob.glob(name + '.fits')) == 1:
             os.system('rm ' + name + '.fits')

@@ -570,7 +570,7 @@ def master_bias(files, write=True, outdir='/', readnoise=False, clobber=False, v
 
 #        hout = fits.Header()
         hout['HISTORY'] = 'This is a median master'
-        hout['MEDCCDTEMP'] = (np.median(temps), "Median CCD temperature")
+        hout['MCCDTEMP'] = (np.median(temps), "Median CCD temperature")
         hout["TEMPSIG"] = (np.std(temps), "CCD temperature RMS")
         hout["MEDBIAS"] = (med, "Median bias level (cts)")
         hout["BIASSIG"] = (sig, "Bias RMS (cts)")
